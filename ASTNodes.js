@@ -133,3 +133,57 @@ export class Grouping extends Expr{
         return `Grouping (${this.value})`;
     }
 }
+
+class Stmt{
+    constructor(){}
+}
+
+export class Stmts{
+    constructor(stmts, line){
+        for(let i = 0; i < stmts.length; i++){
+            if( !(stmts[i] instanceof Stmt) ){
+                parseError(line, `${stmts[i]} is not a statement`)
+            }
+        }
+        this.stmts = stmts
+        this.line = line
+    }
+    [util.inspect.custom]() {
+        return `Stmts (${this.stmts})`;
+    }
+    toString(){
+        return `Stmts (${this.stmts})`;
+    }
+}
+
+export class ExpressionStmt extends Stmt{
+    constructor(expression, line){
+        super()
+        if( !(expression instanceof Expr) ){parseError(line, `${expression} is not an expression`)}
+        this.expression = expression
+        this.line = line
+    }
+    
+    [util.inspect.custom]() {
+        return `ExpressionStmt (${this.expression})`;
+    }
+    toString(){
+        return `ExpressionStmt (${this.expression})`;
+    }
+}
+
+export class PrintStmt extends Stmt{
+    constructor(expression, line){
+        super()
+        if( !(expression instanceof Expr) ){parseError(line, `${expression} is not an expression`)}
+        this.expression = expression
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `PrintStmt (${this.expression})`;
+    }
+    toString(){
+        return `PrintStmt (${this.expression})`;
+    }
+}

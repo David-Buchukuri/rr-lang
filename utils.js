@@ -19,8 +19,8 @@ export function runtimeError(line, message){
     process.exit(1)
 }
 
-export function printAST(ast){
-    let astText = ast.toString()
+export function printAST(statements){
+    let astText = statements.toString()
 
     let tabs = 0
     let currChars = []

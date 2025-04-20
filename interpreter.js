@@ -9,11 +9,12 @@ const TYPE_BOOL   = 'TYPE_BOOL'
 const TYPE_NULL   = 'TYPE_NULL'
 
 export default class Interpreter{
-    interpretAst(ast){
-        return this.interpret(ast)
+    interpretAst(statements){
+        return this.interpret(statements)
     }
 
     interpret(node){
+        // expressions
         if(node instanceof ASTNode.Number){
             return [TYPE_NUMBER, parseFloat(node.value)]
         }
@@ -94,6 +95,22 @@ export default class Interpreter{
                 return [TYPE_BOOL, leftVal === rightVal]
             }
         }
+
+        // statements
+        else if(node instanceof ASTNode.ExpressionStmt){
+            this.interpret(node.expression)
+        }
+        else if(node instanceof ASTNode.PrintStmt){
+            let [resultType, resultVar] = this.interpret(node.expression)
+            console.log(resultVar)
+        }
+        else if(node instanceof ASTNode.Stmts){
+            for(let i = 0; i < node.stmts.length; i++){
+                this.interpret(node.stmts[i])
+            }
+        }
+
+
     }
 
 

@@ -1,12 +1,25 @@
-// expression     → equality ;
-// equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-// comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-// term           → factor ( ( "-" | "+" ) factor )* ;
-// factor         → unary ( ( "/" | "*" ) unary )* ;
-// unary          → ( "!" | "-" ) unary
-//                | primary ;
-// primary        → NUMBER | STRING | "true" | "false" | "nil"
-//                | "(" expression ")" ;
+/*
+program        → statements EOF ;
+statements     → statement*;
+
+statement      → exprStmt
+               | printStmt ;
+
+exprStmt       → expression ";" ;
+exprStmt       → "print" expression ";" ;
+
+---
+
+expression     → equality ;
+equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term           → factor ( ( "-" | "+" ) factor )* ;
+factor         → unary ( ( "/" | "*" ) unary )* ;
+unary          → ( "!" | "-" ) unary
+               | primary ;
+primary        → NUMBER | STRING | "true" | "false" | "nil"
+               | "(" expression ")" ;
+*/
 
 import * as TOKENS from './tokens.js'
 import * as ASTNode from './ASTNodes.js'
@@ -145,13 +158,39 @@ export default class Parser{
         return this.equality()
     }
 
-    program(){
-        let expression = this.expression()
-        return expression
+    printStatement(){
+        let expression = this.expression();
+        this.consume(TOKENS.SEMICOLON, "Expect ';' after expression");
+        return new ASTNode.PrintStmt(expression);
+    }
+
+    expressionStatement(){
+        let expression = this.expression();
+        this.consume(TOKENS.SEMICOLON, "Expect ';' after expression");
+        return new ASTNode.ExpressionStmt(expression);
+    }
+
+    statement() {
+        if (this.match([TOKENS.PRINT])){
+            return this.printStatement();
+        }
+
+        return this.expressionStatement();
+    }
+
+    statements(){
+        let statements = []
+
+        while(!this.isAtEnd()){
+            statements.push(this.statement())
+        }
+
+        statements = new ASTNode.Stmts(statements)
+
+        return statements
     }
 
     parse(){
-        let ast = this.program()
-        return ast
+       return this.statements()
     }
 }   

@@ -30,20 +30,24 @@ import { printAST } from './utils.js'
 //     (true == false) != true == true
 // `
 let srcCode = `
-    3 - 2 == 7 * 2
+    print 3 - 2 == 7 * 2;
+    print 1 + 2 * 4 / 2;
+    2 + 3;
+    (1 / 2 + 1);
 `
 
 let lexer = new Lexer(srcCode);
 let tokens = lexer.lexTokens();
 console.log(tokens)
+console.log("\n")
 
 let parser = new Parser(tokens)
-let ast = parser.parse()
-printAST(ast)
-
+let statements = parser.parse()
+printAST(statements)
+console.log("\n")
 
 let interpreter = new Interpreter()
-let result = interpreter.interpretAst(ast)
-console.log(result)
+let result = interpreter.interpretAst(statements)
+// console.log(result)
 
 
