@@ -4,17 +4,7 @@ import Interpreter from './interpreter.js'
 import { Token } from './tokens.js'
 import { printAST } from './utils.js'
 
-// let srcCode = `
-//     var a = 7;
-//     print("hello world")
-//     0.4562
-//     2 + 3 - 1
-//     {}()*
-//     for(var i = 1; i < 8; i++){
-//         print(i)
-//     }
-//     while(l < 8){print(l)}
-// `
+
 
 // let srcCode = `
 //     4 == 1 - 2 * 3 / --2 != ("hey" + 2) >= 2 < 3 > "y"
@@ -29,11 +19,29 @@ import { printAST } from './utils.js'
 // let srcCode = `
 //     (true == false) != true == true
 // `
+// let srcCode = `
+//     (1 / 2 + 3);
+//     var1 = 2 / (3 + 1);
+//     var1 = 7;
+//     print 1 + 2 * var1 / 2;
+// `
+// let srcCode = `
+//     var1 = [1, 2, (true == false), 2 > 3];
+//     print 1 + 2 * var1 / 2;
+// `
+// let srcCode = `
+//     var2[1][b[2]];
+// `
+
+// let srcCode = `
+//     b = [67, "abc"];
+//     a = [1, 2, 3, [5, 6, b]];
+//     print a[3][2][1] + "edf" + "w";
+// `
 let srcCode = `
-    print 3 - 2 == 7 * 2;
-    print 1 + 2 * 4 / 2;
-    2 + 3;
-    (1 / 2 + 1);
+    b = [1, 2, [3, 4]];
+    b[2][1];
+    b[0] = [67, "abc"];
 `
 
 let lexer = new Lexer(srcCode);
@@ -46,8 +54,6 @@ let statements = parser.parse()
 printAST(statements)
 console.log("\n")
 
-let interpreter = new Interpreter()
-let result = interpreter.interpretAst(statements)
-// console.log(result)
-
+// let interpreter = new Interpreter()
+// let result = interpreter.interpretAst(statements)
 

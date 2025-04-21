@@ -46,51 +46,69 @@ class Lexer{
         
         if(char == '('){
             this.addToken(TOKENS.LEFT_PAREN)
-        }else if(char == ')'){
+        }
+        else if(char == ')'){
             this.addToken(TOKENS.RIGHT_PAREN)
-        }else if(char == '('){
-            this.addToken(TOKENS.RIGHT_PAREN)
-        }else if(char == '{'){
+        }
+        else if(char == '{'){
             this.addToken(TOKENS.LEFT_BRACE)
-        }else if(char == '}'){
+        }
+        else if(char == '}'){
             this.addToken(TOKENS.RIGHT_BRACE)
-        }else if(char == ','){
+        }
+        else if(char == '['){
+            this.addToken(TOKENS.LEFT_BRACKET)
+        }
+        else if(char == ']'){
+            this.addToken(TOKENS.RIGHT_BRACKET)
+        }
+        else if(char == ','){
             this.addToken(TOKENS.COMMA)
-        }else if(char == '.'){
+        }
+        else if(char == '.'){
             this.addToken(TOKENS.DOT)
-        }else if(char == '-'){
+        }
+        else if(char == '-'){
             this.addToken(TOKENS.MINUS)
-        }else if(char == '+'){
+        }
+        else if(char == '+'){
             this.addToken(TOKENS.PLUS)
-        }else if(char == '*'){
+        }
+        else if(char == '*'){
             this.addToken(TOKENS.STAR)
-        }else if(char == ';'){
+        }
+        else if(char == ';'){
             this.addToken(TOKENS.SEMICOLON)
-        }else if(char == '>'){
+        }
+        else if(char == '>'){
             if(this.currEqual('=')){
                 this.addToken(TOKENS.GREATER_EQUAL)
             }else{
                 this.addToken(TOKENS.GREATER)
             }
-        }else if(char == '<'){
+        }
+        else if(char == '<'){
             if(this.currEqual('=')){
                 this.addToken(TOKENS.LESS_EQUAL)
             }else{
                 this.addToken(TOKENS.LESS)
             }
-        }else if(char == '!'){
+        }
+        else if(char == '!'){
             if(this.currEqual('=')){
                 this.addToken(TOKENS.BANG_EQUAL)
             }else{
                 this.addToken(TOKENS.BANG)
             }
-        }else if(char == '='){
+        }
+        else if(char == '='){
             if(this.currEqual('=')){
                 this.addToken(TOKENS.EQUAL_EQUAL)
             }else{
                 this.addToken(TOKENS.EQUAL)
             }
-        }else if(char ==  '/'){
+        }
+        else if(char ==  '/'){
             if (this.currEqual('/')){
                 while(!this.isAtEnd() && this.peek() != "\n"){
                     this.advance()
@@ -99,16 +117,20 @@ class Lexer{
             else{
                 this.addToken(TOKENS.SLASH)
             }
-        }else if( [" ", "\t", "\r"].includes(char) ){
+        }
+        else if( [" ", "\t", "\r"].includes(char) ){
             // continue;
-        }else if(char == "\n"){
+        }
+        else if(char == "\n"){
             this.line += 1
-        }else if(char == '"'){
+        }
+        else if(char == '"'){
             this.addStringToken()
         }else{
             if( this.isDigit(char) ){
                 this.addNumberToken()
-            }else if( this.isAlpha(char) ){
+            }
+            else if( this.isAlpha(char) ){
                 this.addIdentifierToken()
             }else{
                 lexError(this.line, `unexpected character ${char}`)

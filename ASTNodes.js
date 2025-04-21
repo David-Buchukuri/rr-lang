@@ -66,7 +66,7 @@ export class Bool extends Expr{
 export class Null extends Expr{
     constructor(value, line){
         super()
-        if( !(value != null) ){parseError(line, `${value} is not a null`)}
+        if( (value != null) ){parseError(line, `${value} is not a null`)}
 
         this.line = line
         this.value = value
@@ -89,7 +89,6 @@ export class String extends Expr{
         this.value = value
     }
 
-
     [util.inspect.custom]() {
         return `String [${this.value}]`;
     }
@@ -97,7 +96,6 @@ export class String extends Expr{
         return `String [${this.value}]`;
     }
 }
-
 
 export class Number extends Expr{
     constructor(value, line){
@@ -108,12 +106,71 @@ export class Number extends Expr{
         this.value = value
     }
 
-
     [util.inspect.custom]() {
         return `Number [${this.value}]`;
     }
     toString(){
         return `Number [${this.value}]`;
+    }
+}
+
+export class Identifier extends Expr{
+    constructor(value, line){
+        super()
+        if( !(typeof value == 'string') ){parseError(line, `${value} is not a string`)}
+
+        this.line = line
+        this.value = value
+    }
+
+    [util.inspect.custom]() {
+        return `Identifier [${this.value}]`;
+    }
+    toString(){
+        return `Identifier [${this.value}]`;
+    }
+}
+
+export class ArrayLiteral extends Expr{
+    constructor(values, line){
+        super()
+        for(let i = 0; i < values.length; i++){
+            if( !(values[i] instanceof Expr) ){
+                parseError(line, `${values[i]} is not an expression`)
+            }
+        }
+
+        this.values = values
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `ArrayLiteral (${this.values})`;
+    }
+    toString(){
+        return `ArrayLiteral (${this.values})`;
+    }
+}
+
+export class ArrayAccession extends Expr{
+    constructor(identifier, values, line){
+        super()
+        for(let i = 0; i < values.length; i++){
+            if( !(values[i] instanceof Expr) ){
+                parseError(line, `${values[i]} is not an expression`)
+            }
+        }
+
+        this.identifier = identifier
+        this.values = values
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `ArrayAccession (Identifier - ${this.identifier}, Indexes - (${this.values}))`;
+    }
+    toString(){
+        return `ArrayAccession (Identifier - ${this.identifier}, Indexes - (${this.values}))`;
     }
 }
 
@@ -185,5 +242,49 @@ export class PrintStmt extends Stmt{
     }
     toString(){
         return `PrintStmt (${this.expression})`;
+    }
+}
+
+export class StandardAssignmentStmt extends Stmt{
+    constructor(identifier, value, line){
+        super()
+        if( !(value instanceof Expr) ){parseError(line, `${value} is not an expression`)}
+        if( typeof identifier != 'string' ){parseError(line, `${identifier} is not a string`)}
+        
+        this.identifier = identifier
+        this.value = value
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `StandardAssignmentStmt (${this.identifier}, ${this.value})`;
+    }
+    toString(){
+        return `StandardAssignmentStmt (${this.identifier}, ${this.value})`;
+    }
+}
+
+export class ArrayElementAssignmentStmt extends Stmt{
+    constructor(identifier, indexExpressions, value, line){
+        super()
+        for(let i = 0; i < indexExpressions.length; i++){
+            if( !(indexExpressions[i] instanceof Expr) ){
+                parseError(line, `${indexExpressions[i]} is not an expression`)
+            }
+        }
+        if( !(value instanceof Expr) ){parseError(line, `${value} is not an expression`)}
+        if( typeof identifier != 'string' ){parseError(line, `${identifier} is not a string`)}
+
+        this.identifier = identifier
+        this.indexExpressions = indexExpressions
+        this.value = value
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `ArrayElementAssignmentStmt (Identifier - ${this.identifier}, Indexes - (${this.indexExpressions}), Value - ${this.value})`;
+    }
+    toString(){
+        return `ArrayElementAssignmentStmt (Identifier - ${this.identifier}, Indexes - (${this.indexExpressions}), Value - ${this.value})`;
     }
 }
