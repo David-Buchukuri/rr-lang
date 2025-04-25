@@ -21,7 +21,7 @@ term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | arrayAccession ;
 arrayAccession → arrayAccess | primary
-primary        → NUMBER | STRING | "true" | "false" | "nil"
+primary        → NUMBER | STRING | "true" | "false" | "null"
                | "(" expression ")" | IDENTIFIER | arrayLiteral;
 
 --- helpers ---
@@ -106,7 +106,7 @@ export default class Parser{
         else if (this.match([TOKENS.TRUE])){
             return new ASTNode.Bool(true, this.previous().line);
         }
-        else if (this.match([TOKENS.NIL])){
+        else if (this.match([TOKENS.NULL])){
             return new ASTNode.Null(null, this.previous().line);
         }
         else if (this.match([TOKENS.STRING])){

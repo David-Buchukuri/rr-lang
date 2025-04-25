@@ -30,7 +30,7 @@ export const FALSE ='FALSE'
 export const FUN ='FUN'
 export const FOR ='FOR'
 export const IF ='IF'
-export const NIL ='NIL'
+export const NULL ='NULL'
 export const OR ='OR'
 
 export const PRINT = 'PRINT' 

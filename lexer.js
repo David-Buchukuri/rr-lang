@@ -11,7 +11,7 @@ class Lexer{
         'fun'    : TOKENS.FUN,
         'for'    : TOKENS.FOR,
         'if'     : TOKENS.IF,
-        'nil'    : TOKENS.NIL,
+        'null'   : TOKENS.NULL,
         'or'     : TOKENS.OR,
         'print'  : TOKENS.PRINT,
         'return' : TOKENS.RETURN,
