@@ -50,3 +50,38 @@ export function printAST(statements){
 
     }
 }
+
+const TYPE_ARRAY = 'TYPE_ARRAY'
+const TYPE_NUMBER = 'TYPE_NUMBER'
+const TYPE_STRING = 'TYPE_STRING'  
+const TYPE_BOOL   = 'TYPE_BOOL'
+const TYPE_NULL   = 'TYPE_NULL'
+
+let colorMap = {
+    TYPE_ARRAY: "",
+    TYPE_NUMBER: "",
+    TYPE_STRING: "",
+    TYPE_BOOL: "",
+    TYPE_NULL: "",
+}
+
+
+export function formattedDatatype(dataType){
+    let [type, val] = dataType
+
+    if([TYPE_NUMBER, TYPE_STRING, TYPE_BOOL, TYPE_NULL].includes(type)){
+        return val
+    }
+
+    let arrayElemVals = []
+
+    if(type == TYPE_ARRAY){
+
+        val.forEach(el => {
+            arrayElemVals.push(formattedDatatype(el))
+        })
+
+    }
+
+    return '[' + arrayElemVals.join(', ') + ']'
+}

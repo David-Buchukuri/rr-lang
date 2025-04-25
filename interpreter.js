@@ -1,8 +1,7 @@
 import * as ASTNode from './ASTNodes.js'
 import * as TOKENS from  './tokens.js'
-import { runtimeError } from  './utils.js'
+import { runtimeError, formattedDatatype } from  './utils.js'
 import Environment from  './environment.js'
-
 
 const TYPE_ARRAY = 'TYPE_ARRAY'
 const TYPE_NUMBER = 'TYPE_NUMBER'
@@ -158,12 +157,58 @@ export default class Interpreter{
             this.interpret(node.expression, env)
         }
         else if(node instanceof ASTNode.PrintStmt){
-            let [resultType, resultVar] = this.interpret(node.expression, env)
-            console.log(resultVar)
+            let result = this.interpret(node.expression, env)
+            console.log(
+                formattedDatatype(result)
+            )
         }
         else if(node instanceof ASTNode.StandardAssignmentStmt){
             let value = this.interpret(node.value, env)
             env.setVar(node.identifier, value)
+        }
+        else if(node instanceof ASTNode.ArrayElementAssignmentStmt){
+            let variableName = node.identifier
+            let variable = env.getVar(variableName) 
+            if(!variable){
+                runtimeError(node.line, `Undefined variable ${variableName}`)
+            }
+
+            let varType = variable[0]
+            if(varType != TYPE_ARRAY){
+                runtimeError(node.line, `Expected type array for ${variableName}, got ${varType}`)
+            }
+
+            let indexAccessions = node.indexExpressions
+            let indexesToAccess = [];
+            for(let i = 0; i < indexAccessions.length; i++){
+                let [type, value] = this.interpret(indexAccessions[i], env)
+                if(type != TYPE_NUMBER){
+                    runtimeError(node.line, `Expected type number for index, got ${type}`)
+                }
+                indexesToAccess.push(value)
+            }
+
+            let elemToAccess = variable[1]
+            let elemToAccessType = TYPE_ARRAY
+            let arrayToChange = elemToAccess
+            let idx = indexesToAccess[0]
+            
+            for(let i = 0; i < indexesToAccess.length; i++){
+                idx = indexesToAccess[i]
+
+                if(elemToAccessType != TYPE_ARRAY){
+                    runtimeError(node.line, `Cannot access index on element of type ${elemToAccessType}`)
+                }
+                arrayToChange = elemToAccess
+
+                if(idx >= elemToAccess.length || idx < 0){
+                    runtimeError(node.line, `Index out of range`)
+                }
+
+                [elemToAccessType, elemToAccess] = elemToAccess[idx]
+            }
+
+            arrayToChange[idx] = this.interpret(node.value)
         }
         else if(node instanceof ASTNode.Stmts){
             for(let i = 0; i < node.stmts.length; i++){
@@ -185,3 +230,5 @@ export default class Interpreter{
     }
 
 }
+
+

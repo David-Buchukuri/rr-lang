@@ -1,7 +1,6 @@
 import Lexer from './lexer.js'
 import Parser from './parser.js'
 import Interpreter from './interpreter.js'
-import { Token } from './tokens.js'
 import { printAST } from './utils.js'
 
 
@@ -37,12 +36,22 @@ import { printAST } from './utils.js'
 //     b = [67, "abc"];
 //     a = [1, 2, 3, [5, 6, b]];
 //     print a[3][2][1] + "edf" + "w";
+//     c = [1, 2, 3, [5, 6, 7]];
+//     print a;
 // `
+
 let srcCode = `
     b = [1, 2, [3, 4]];
-    b[2][1];
     b[0] = [67, "abc"];
+    b[0][1] = 7;
+    b[0] = 9;
+    b[1] = [1, 6, [3, [1, 2, true, "abc"]]];
+    print b;
 `
+
+// let srcCode = `
+//     print 9 > 5;
+// `
 
 let lexer = new Lexer(srcCode);
 let tokens = lexer.lexTokens();
@@ -54,6 +63,5 @@ let statements = parser.parse()
 printAST(statements)
 console.log("\n")
 
-// let interpreter = new Interpreter()
-// let result = interpreter.interpretAst(statements)
-
+let interpreter = new Interpreter()
+let result = interpreter.interpretAst(statements)
