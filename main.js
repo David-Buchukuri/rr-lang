@@ -3,8 +3,6 @@ import Parser from './parser.js'
 import Interpreter from './interpreter.js'
 import { printAST } from './utils.js'
 
-
-
 // let srcCode = `
 //     4 == 1 - 2 * 3 / --2 != ("hey" + 2) >= 2 < 3 > "y"
 // `
@@ -45,7 +43,7 @@ let srcCode = `
     b[0] = [67, "abc"];
     b[0][1] = 7;
     b[0] = 9;
-    b[1] = [1, 6, [3, [1, 2, true, "abc"]]];
+    b[1] = [1, null, [3, [1, 2, true, "abc", 1]]];
     print b;
 `
 

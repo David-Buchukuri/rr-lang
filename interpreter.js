@@ -158,9 +158,8 @@ export default class Interpreter{
         }
         else if(node instanceof ASTNode.PrintStmt){
             let result = this.interpret(node.expression, env)
-            console.log(
-                formattedDatatype(result)
-            )
+            formattedDatatype(result)
+            console.log()
         }
         else if(node instanceof ASTNode.StandardAssignmentStmt){
             let value = this.interpret(node.value, env)

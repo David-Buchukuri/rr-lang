@@ -1,4 +1,12 @@
+const WHITE  = "\x1b[0m"
+const BLUE   = "\x1b[94m"
+const CYAN   = "\x1b[96m"
+const GREEN  = "\x1b[92m"
+const YELLOW = "\x1b[93m"
+const RED    = "\x1b[91m"
+
 export function lexError(line, message){
+    process.stdout.write(RED)
     let errorMessage = `line ${line}, error: ${message}`
     console.log("Lexing error")
     console.log(errorMessage)
@@ -6,6 +14,7 @@ export function lexError(line, message){
 }
 
 export function parseError(line, message){
+    process.stdout.write(RED)
     console.log("Parsing error")
     let errorMessage = `line ${line}, error: ${message}`
     console.log(errorMessage)
@@ -13,6 +22,7 @@ export function parseError(line, message){
 }
 
 export function runtimeError(line, message){
+    process.stdout.write(RED)
     console.log("Runtime error")
     let errorMessage = `line ${line}, error: ${message}`
     console.log(errorMessage)
@@ -57,31 +67,48 @@ const TYPE_STRING = 'TYPE_STRING'
 const TYPE_BOOL   = 'TYPE_BOOL'
 const TYPE_NULL   = 'TYPE_NULL'
 
-let colorMap = {
-    TYPE_ARRAY: "",
-    TYPE_NUMBER: "",
-    TYPE_STRING: "",
-    TYPE_BOOL: "",
-    TYPE_NULL: "",
-}
-
-
 export function formattedDatatype(dataType){
     let [type, val] = dataType
 
-    if([TYPE_NUMBER, TYPE_STRING, TYPE_BOOL, TYPE_NULL].includes(type)){
-        return val
+    if(type == TYPE_NUMBER){
+        process.stdout.write(CYAN)
+        process.stdout.write(val.toString())
+        return
     }
 
-    let arrayElemVals = []
+    if(type == TYPE_STRING){
+        process.stdout.write(YELLOW)
+        process.stdout.write("'")
+        process.stdout.write(val.toString())
+        process.stdout.write("'")
+        return
+    }
 
+    if(type == TYPE_BOOL){
+        process.stdout.write(GREEN)
+        process.stdout.write(val.toString())
+        return
+    }
+
+    if(type == TYPE_NULL){
+        process.stdout.write(RED)
+        process.stdout.write('null')
+        return
+    }
+    
     if(type == TYPE_ARRAY){
+        process.stdout.write(WHITE)
+        process.stdout.write('[')
 
-        val.forEach(el => {
-            arrayElemVals.push(formattedDatatype(el))
-        })
+        for(let i = 0; i < val.length; i++){
+            formattedDatatype(val[i])
+            process.stdout.write(WHITE)
+            if(i != val.length - 1){
+                process.stdout.write(', ')
+            }
+        }
 
+        process.stdout.write(WHITE)
+        process.stdout.write(']')
     }
-
-    return '[' + arrayElemVals.join(', ') + ']'
 }
