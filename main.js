@@ -52,20 +52,29 @@ import { printAST } from './utils.js'
 //     print b[1 + 1];
 // `
 
-let srcCode = `
-    b = [1, 2, [3, 4]];
-    c = [];
-    a = 1;
+// let srcCode = `
+//     b = [1, 2, [3, 4]];
+//     c = [];
+//     a = 1;
     
-    print b[a];
+//     print b[a];
 
-    if(false){
-    }else{
-        a = "apple";
+//     if(false){
+//     }else{
+//         a = "apple";
+//     }
+//     print a;
+// `
+
+let srcCode = `
+    print "start loop";
+    i = 0;
+    while(i < 5){
+        print "hello";
+        i = i + 1;
     }
-    print a;
+    print null;
 `
-
 
 let lexer = new Lexer(srcCode);
 let tokens = lexer.lexTokens();

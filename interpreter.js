@@ -226,6 +226,21 @@ export default class Interpreter{
                 this.interpret(node.elseStatements, env)
             }
         }
+        else if(node instanceof ASTNode.WhileStmt){
+            while(true){
+                let [type, val] = this.interpret(node.conditionExpr, env)
+
+                if(type != TYPE_BOOL){
+                    runtimeError(node.line, `Expected type boolean for the loop condition, got ${type}`)
+                }
+
+                if(!val){
+                    break
+                }
+
+                this.interpret(node.statements, env)
+            }
+        }
         else if(node instanceof ASTNode.Stmts){
             for(let i = 0; i < node.stmts.length; i++){
                 this.interpret(node.stmts[i], env)

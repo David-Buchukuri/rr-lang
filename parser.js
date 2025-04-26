@@ -6,15 +6,17 @@ statement      → exprStmt
                | printStmt
                | arrayElementAssignmentStmt
                | standardAssignmentStmt
-               | ifStmt;
+               | ifStmt
+               | whileStmt;
                
 
 standardAssignmentStmt       → IDENTIFIER "=" expression ";" ;
 arrayElementAssignmentStmt   → arrayAccess "=" expression ";" ;
 exprStmt                     → expression ";" ;
 printStmt                    → "print" expression ";" ;
-ifStmt                       → "if" "(" expression ")" "{" statements "}" 
-                               ("else" "{" statements "}")? ;
+ifStmt                       → "if" "(" expression ")" "{" statements? "}" 
+                               ("else" "{" statements? "}")? ;
+whileStmt                    → "while" "(" expression ")" "{" statements? "}"
 
 ---
 expression     → equality ;
@@ -298,6 +300,23 @@ export default class Parser{
         return new ASTNode.IfStmt(expr, ifStatements, elseStatements, line)
     }
 
+    whileStatement(){
+        let line = this.advance().line
+        this.consume(TOKENS.LEFT_PAREN, 'Expect ( before while condition')
+        let expr = this.expression()
+        this.consume(TOKENS.RIGHT_PAREN, 'Expect ) after while condition')
+        this.consume(TOKENS.LEFT_BRACE, 'Expect { after while statement')
+
+        // handle empty while statement
+        let whileStatements = []
+        if(!this.match([TOKENS.RIGHT_BRACE])){
+            whileStatements = this.statements()
+            this.consume(TOKENS.RIGHT_BRACE, 'Expect } after while statement')
+        }
+
+        return new ASTNode.WhileStmt(expr, whileStatements, line)
+    }
+
     statement() {
         if (this.check(TOKENS.PRINT)){
             return this.printStatement();
@@ -305,6 +324,10 @@ export default class Parser{
 
         if (this.check(TOKENS.IF)){
             return this.ifStatement();
+        }
+
+        if (this.check(TOKENS.WHILE)){
+            return this.whileStatement();
         }
 
         if(this.check(TOKENS.IDENTIFIER)){

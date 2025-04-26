@@ -321,3 +321,29 @@ export class IfStmt extends Stmt{
         return `IfStmt (Condition - ${this.conditionExpr}, If Branch - (${this.ifStatements}), Else Branch - (${this.elseStatements}))`;
     }
 }
+
+export class WhileStmt extends Stmt{
+    constructor(conditionExpr, statements, line){
+        super()
+        if( !(conditionExpr instanceof Expr) ){
+            parseError(line, `${conditionExpr} is not an expression`)
+        }
+
+        for(let i = 0; i < statements.length; i++){
+            if( !(statements[i] instanceof Stmt) ){
+                parseError(statements[i]?.line ?? line, `${statements[i]} is not a statement`)
+            }
+        }
+
+        this.conditionExpr = conditionExpr
+        this.statements = statements
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `WhileStmt (Condition - ${this.conditionExpr}, Statements - (${this.statements}))`;
+    }
+    toString(){
+        return `WhileStmt (Condition - ${this.conditionExpr}, Statements - (${this.statements}))`;
+    }
+}
