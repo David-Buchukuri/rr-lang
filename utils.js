@@ -78,9 +78,9 @@ export function formattedDatatype(dataType){
 
     if(type == TYPE_STRING){
         process.stdout.write(YELLOW)
-        process.stdout.write("'")
+        process.stdout.write('"')
         process.stdout.write(val.toString())
-        process.stdout.write("'")
+        process.stdout.write('"')
         return
     }
 

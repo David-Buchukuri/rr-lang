@@ -4,7 +4,7 @@ import Interpreter from './interpreter.js'
 import { printAST } from './utils.js'
 
 // let srcCode = `
-//     4 == 1 - 2 * 3 / --2 != ("hey" + 2) >= 2 < 3 > "y"
+//     4 == 1 - 2 * 3 / --2 != ("hey" + 2) >= 2 < 3 > "y";
 // `
 // let srcCode = `
 //     true == false
@@ -38,18 +38,34 @@ import { printAST } from './utils.js'
 //     print a;
 // `
 
+// let srcCode = `
+//     b = [1, 2, [3, 4]];
+
+//     b[0] = [67, "abc"];
+
+//     b[0][1] = 7;
+
+//     b[0] = 9;
+
+//     b[1] = [1, null, [3, [1, 2, true, "abc", 1]]];
+
+//     print b[1 + 1];
+// `
+
 let srcCode = `
     b = [1, 2, [3, 4]];
-    b[0] = [67, "abc"];
-    b[0][1] = 7;
-    b[0] = 9;
-    b[1] = [1, null, [3, [1, 2, true, "abc", 1]]];
-    print b;
+    c = [];
+    a = 1;
+    
+    print b[a];
+
+    if(false){
+    }else{
+        a = "apple";
+    }
+    print a;
 `
 
-// let srcCode = `
-//     print 9 > 5;
-// `
 
 let lexer = new Lexer(srcCode);
 let tokens = lexer.lexTokens();

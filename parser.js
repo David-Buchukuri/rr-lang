@@ -5,13 +5,16 @@ statements     → statement*;
 statement      → exprStmt
                | printStmt
                | arrayElementAssignmentStmt
-               | standardAssignmentStmt;
+               | standardAssignmentStmt
+               | ifStmt;
                
 
 standardAssignmentStmt       → IDENTIFIER "=" expression ";" ;
 arrayElementAssignmentStmt   → arrayAccess "=" expression ";" ;
 exprStmt                     → expression ";" ;
 printStmt                    → "print" expression ";" ;
+ifStmt                       → "if" "(" expression ")" "{" statements "}" 
+                               ("else" "{" statements "}")? ;
 
 ---
 expression     → equality ;
@@ -123,7 +126,7 @@ export default class Parser{
         else if (this.match([TOKENS.LEFT_PAREN])) {
             let expr = this.expression();
             this.consume(TOKENS.RIGHT_PAREN, "Expect ')' after expression");
-            return new ASTNode.Grouping(expr);
+            return new ASTNode.Grouping(expr, this.previous().line);
         }
         else if(this.match([TOKENS.LEFT_BRACKET])){
             let line = this.previous().line
@@ -222,15 +225,17 @@ export default class Parser{
     }
 
     printStatement(){
+        let line = this.advance().line
         let expression = this.expression();
         this.consume(TOKENS.SEMICOLON, "Expect ';' after expression");
-        return new ASTNode.PrintStmt(expression);
+        return new ASTNode.PrintStmt(expression, line);
     }
 
     expressionStmt(){
+        let line = this.peek().line
         let expression = this.expression();
         this.consume(TOKENS.SEMICOLON, "Expect ';' after expression");
-        return new ASTNode.ExpressionStmt(expression);
+        return new ASTNode.ExpressionStmt(expression, line);
     }
 
     standardAssignmentStmt(){
@@ -266,9 +271,40 @@ export default class Parser{
         return new ASTNode.ArrayElementAssignmentStmt(identifier, indexExpressions, value, line)
     }
 
+    ifStatement(){
+        let line = this.advance().line
+        this.consume(TOKENS.LEFT_PAREN, 'Expect ( before if condition')
+        let expr = this.expression()
+        this.consume(TOKENS.RIGHT_PAREN, 'Expect ) after if condition')
+        this.consume(TOKENS.LEFT_BRACE, 'Expect { after if statement')
+
+        // handle empty if statement
+        let ifStatements = []
+        if(!this.match([TOKENS.RIGHT_BRACE])){
+            ifStatements = this.statements()
+            this.consume(TOKENS.RIGHT_BRACE, 'Expect } after if statement')
+        }
+
+        let elseStatements = []
+        if(this.match([TOKENS.ELSE])){
+            this.consume(TOKENS.LEFT_BRACE, 'Expect { after else')
+
+            if(!this.match([TOKENS.RIGHT_BRACE])){
+                elseStatements = this.statements()
+                this.consume(TOKENS.RIGHT_BRACE, 'Expect } after else')
+            }
+        }
+
+        return new ASTNode.IfStmt(expr, ifStatements, elseStatements, line)
+    }
+
     statement() {
-        if (this.match([TOKENS.PRINT])){
+        if (this.check(TOKENS.PRINT)){
             return this.printStatement();
+        }
+
+        if (this.check(TOKENS.IF)){
+            return this.ifStatement();
         }
 
         if(this.check(TOKENS.IDENTIFIER)){
@@ -288,12 +324,13 @@ export default class Parser{
 
     statements(){
         let statements = []
+        let line = this.peek().line
 
-        while(!this.isAtEnd()){
+        while(!this.isAtEnd() && !this.check(TOKENS.RIGHT_BRACE)){
             statements.push(this.statement())
         }
 
-        statements = new ASTNode.Stmts(statements)
+        statements = new ASTNode.Stmts(statements, line)
 
         return statements
     }

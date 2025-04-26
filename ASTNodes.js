@@ -3,7 +3,7 @@ import { parseError } from  './utils.js'
 import util from 'util';
 
 
-class Expr{
+export class Expr{
     constructor(){}
 }
 
@@ -191,7 +191,7 @@ export class Grouping extends Expr{
     }
 }
 
-class Stmt{
+export class Stmt{
     constructor(){}
 }
 
@@ -286,5 +286,38 @@ export class ArrayElementAssignmentStmt extends Stmt{
     }
     toString(){
         return `ArrayElementAssignmentStmt (Identifier - ${this.identifier}, Indexes - (${this.indexExpressions}), Value - ${this.value})`;
+    }
+}
+
+export class IfStmt extends Stmt{
+    constructor(conditionExpr, ifStatements, elseStatements, line){
+        super()
+        if( !(conditionExpr instanceof Expr) ){
+            parseError(line, `${conditionExpr} is not an expression`)
+        }
+
+        for(let i = 0; i < ifStatements.length; i++){
+            if( !(ifStatements[i] instanceof Stmt) ){
+                parseError(ifStatements[i]?.line ?? line, `${ifStatements[i]} is not a statement`)
+            }
+        }
+
+        for(let i = 0; i < elseStatements.length; i++){
+            if( !(elseStatements[i] instanceof Stmt) ){
+                parseError(elseStatements[i]?.line ?? line, `${elseStatements[i]} is not a statement`)
+            }
+        }
+
+        this.conditionExpr = conditionExpr
+        this.ifStatements = ifStatements
+        this.elseStatements = elseStatements
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `IfStmt (Condition - ${this.conditionExpr}, If Branch - (${this.ifStatements}), Else Branch - (${this.elseStatements}))`;
+    }
+    toString(){
+        return `IfStmt (Condition - ${this.conditionExpr}, If Branch - (${this.ifStatements}), Else Branch - (${this.elseStatements}))`;
     }
 }

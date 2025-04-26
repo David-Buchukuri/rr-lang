@@ -61,6 +61,9 @@ export default class Interpreter{
                 if(type != TYPE_NUMBER){
                     runtimeError(node.line, `Expected type number for index, got ${type}`)
                 }
+                if(value % 1 != 0){
+                    runtimeError(node.line, `Expected integer for index, got float`)
+                }
                 indexesToAccess.push(value)
             }
 
@@ -184,6 +187,9 @@ export default class Interpreter{
                 if(type != TYPE_NUMBER){
                     runtimeError(node.line, `Expected type number for index, got ${type}`)
                 }
+                if(value % 1 != 0){
+                    runtimeError(node.line, `Expected integer for index, got float`)
+                }
                 indexesToAccess.push(value)
             }
 
@@ -207,7 +213,18 @@ export default class Interpreter{
                 [elemToAccessType, elemToAccess] = elemToAccess[idx]
             }
 
-            arrayToChange[idx] = this.interpret(node.value)
+            arrayToChange[idx] = this.interpret(node.value, env)
+        }
+        else if(node instanceof ASTNode.IfStmt){
+            let [type, val] = this.interpret(node.conditionExpr, env)
+            if(type != TYPE_BOOL){
+                runtimeError(node.line, `Expected type boolean for if condition, got ${type}`)
+            }
+            if(val){
+                this.interpret(node.ifStatements, env)
+            }else{
+                this.interpret(node.elseStatements, env)
+            }
         }
         else if(node instanceof ASTNode.Stmts){
             for(let i = 0; i < node.stmts.length; i++){

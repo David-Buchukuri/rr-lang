@@ -51,10 +51,10 @@ export class Token{
     }
 
     [util.inspect.custom]() {
-        return `{${this.type }} {${this.lexeme}} line:${this.line}}`;
+        return `{ ${this.type  }} { ${this.lexeme} } line:${ this.line }}`;
     }
 
     toString() {
-        return `{${this.type}} {${this.lexeme}} line:${this.line}`;
+        return `{ ${this.type} } { ${this.lexeme} } line:${ this.line }`;
     }
 }
