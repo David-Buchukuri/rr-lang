@@ -9,6 +9,12 @@ const TYPE_STRING = 'TYPE_STRING'
 const TYPE_BOOL   = 'TYPE_BOOL'
 const TYPE_NULL   = 'TYPE_NULL'
 
+class ReturnException {
+    constructor(value) {
+      this.value = value;
+    }
+  }
+
 export default class Interpreter{
     interpretAst(statements){
         return this.interpret(statements, new Environment())
@@ -85,6 +91,41 @@ export default class Interpreter{
             }
 
             return [elemToAccessType, elemToAccess]
+        }
+        else if(node instanceof ASTNode.FunctionCall){
+            let func = env.getFunc(node.identifier)
+            if(!func){
+                runtimeError(node.line, `Function ${node.identifier} is not declared`);
+            }
+
+            if(func.parameters.length != node.args.length){
+                runtimeError(node.line, `function ${node.identifier} expected ${func.parameters.length} argument(s), got ${node.args.length}`);
+            }
+
+            let newEnv = new Environment()
+            newEnv.parent = env
+            for(let i = 0; i < node.args.length; i++){
+                newEnv.setVar(
+                    func.parameters[i].lexeme,
+                    this.interpret(node.args[i], env)
+                )
+            }
+
+            try{
+                this.interpret(func.statements, newEnv)
+            }catch(err){
+                if (err instanceof ReturnException) {
+                    return err.value;
+                } else {
+                    throw err;
+                }
+            }
+
+            return [TYPE_NULL, null]
+        }
+        else if(node instanceof ASTNode.ReturnStmt){
+            let result = this.interpret(node.expression, env)
+            throw new ReturnException(result);
         }
         else if(node instanceof ASTNode.Grouping){
             return this.interpret(node.value, env)
@@ -241,8 +282,11 @@ export default class Interpreter{
                 this.interpret(node.statements, env)
             }
         }
+        else if(node instanceof ASTNode.FunctionDeclarationStmt){
+            env.setFunc(node.identifier.lexeme, node)
+        }
         else if(node instanceof ASTNode.Stmts){
-            for(let i = 0; i < node.stmts.length; i++){
+            for(let i = 0; i < node.stmts.length; i++){  
                 this.interpret(node.stmts[i], env)
             }
         }

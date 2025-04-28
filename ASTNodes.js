@@ -1,4 +1,4 @@
-import { Token } from  './tokens.js'
+import { Token, IDENTIFIER } from  './tokens.js'
 import { parseError } from  './utils.js'
 import util from 'util';
 
@@ -174,6 +174,29 @@ export class ArrayAccession extends Expr{
     }
 }
 
+export class FunctionCall extends Expr{
+    constructor(identifier, args, line){
+        super()
+        if( typeof identifier != 'string' ){parseError(line, `${identifier} is not a string`)}
+        for(let i = 0; i < args.length; i++){
+            if( !(args[i] instanceof Expr) ){
+                parseError(line, `${args[i]} is not an expression`)
+            }
+        }
+
+        this.identifier = identifier
+        this.args = args
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `FunctionCall (Identifier - ${this.identifier}, Args - (${this.args}))`;
+    }
+    toString(){
+        return `FunctionCall (Identifier - ${this.identifier}, Args - (${this.args}))`;
+    }
+}
+
 export class Grouping extends Expr{
     constructor(value, line){
         super()
@@ -345,5 +368,53 @@ export class WhileStmt extends Stmt{
     }
     toString(){
         return `WhileStmt (Condition - ${this.conditionExpr}, Statements - (${this.statements}))`;
+    }
+}
+
+export class FunctionDeclarationStmt extends Stmt{
+    constructor(identifier, parameters, statements, line){
+        super()
+        if( identifier?.type != IDENTIFIER){parseError(line, `${identifier} is not an identifier`)}
+
+        for(let i = 0; i < parameters.length; i++){
+            if( parameters[i]?.type != IDENTIFIER ){
+                parseError(parameters[i]?.line ?? line, `${parameters[i]} is not an identifier`)
+            }
+        }
+
+        for(let i = 0; i < statements.length; i++){
+            if( !(statements[i] instanceof Stmt) ){
+                parseError(statements[i]?.line ?? line, `${statements[i]} is not a statement`)
+            }
+        }
+
+        this.identifier = identifier
+        this.parameters = parameters
+        this.statements = statements
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `FunctionDeclarationStmt (Identifier - ${this.identifier.lexeme}, Parameters - (${this.parameters.map(el => el.lexeme)}), Statements - (${this.statements}))`;
+    }
+    toString(){
+        return `FunctionDeclarationStmt (Identifier - ${this.identifier.lexeme}, Parameters - (${this.parameters.map(el => el.lexeme)}), Statements - (${this.statements}))`;
+    }
+}
+
+export class ReturnStmt extends Stmt{
+    constructor(expression, line){
+        super()
+        if( !(expression instanceof Expr) ){parseError(line, `${expression} is not an expression`)}
+    
+        this.expression = expression
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `ReturnStmt (Value - ${this.expression})`;
+    }
+    toString(){
+        return `ReturnStmt (Value - ${this.expression})`;
     }
 }

@@ -66,14 +66,63 @@ import { printAST } from './utils.js'
 //     print a;
 // `
 
+// let srcCode = `
+//     print "start loop";
+//     i = 0;
+//     while(i < 5){
+//         print "hello";
+//         i = i + 1;
+//     }
+//     print null;
+// `
+
+// let srcCode = `
+//     func func1(a, b, c){
+//         print a + b;
+//         if(a > b){
+//             print (b);
+//         }
+//     }
+// `
+
+// let srcCode = `
+//     b = 9;
+
+//     func test1(a){
+//         while(true){
+//             if(true){
+//                 print "deep return";
+//                 return 5;
+//             }
+//         }
+
+//         print "should not print";
+//     }
+
+//     func test(){
+//         print test1(true);
+//         print "logged test 1";
+//         return b;
+//         print "logged test 2";
+//     }
+
+//     func fib(){
+//         return test();
+//     }
+    
+//     print fib();
+// `
+
+
 let srcCode = `
-    print "start loop";
-    i = 0;
-    while(i < 5){
-        print "hello";
-        i = i + 1;
+    func fib(a){
+        if(a <= 1){
+            return a;
+        }
+        return fib(a - 1) + fib(a - 2);
     }
-    print null;
+    
+    print fib(15);
 `
 
 let lexer = new Lexer(srcCode);
@@ -87,4 +136,4 @@ printAST(statements)
 console.log("\n")
 
 let interpreter = new Interpreter()
-let result = interpreter.interpretAst(statements)
+interpreter.interpretAst(statements)

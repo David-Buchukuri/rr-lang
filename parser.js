@@ -7,16 +7,20 @@ statement      → exprStmt
                | arrayElementAssignmentStmt
                | standardAssignmentStmt
                | ifStmt
-               | whileStmt;
+               | whileStmt
+               | functionDeclarationStmt
+               | returnStmt;
                
 
 standardAssignmentStmt       → IDENTIFIER "=" expression ";" ;
 arrayElementAssignmentStmt   → arrayAccess "=" expression ";" ;
 exprStmt                     → expression ";" ;
 printStmt                    → "print" expression ";" ;
-ifStmt                       → "if" "(" expression ")" "{" statements? "}" 
+ifStmt                       → "if" "(" expression ")" "{" statements? "}" ;
                                ("else" "{" statements? "}")? ;
-whileStmt                    → "while" "(" expression ")" "{" statements? "}"
+whileStmt                    → "while" "(" expression ")" "{" statements? "}" ;
+functionDeclarationStmt      → "func" IDENTIFIER "(" IDENTIFIER? ("," IDENTIFIER)* ")" "{" statements? "}" ;
+returnStmt                   → "return" expression? ";" ; 
 
 ---
 expression     → equality ;
@@ -25,21 +29,25 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | arrayAccession ;
-arrayAccession → arrayAccess | primary
+arrayAccession → arrayAccess | primary ;
 primary        → NUMBER | STRING | "true" | "false" | "null"
-               | "(" expression ")" | IDENTIFIER | arrayLiteral;
+               | "(" expression ")" | functionCall | IDENTIFIER | arrayLiteral;
 
 --- helpers ---
 arrayLiteral = "[" expression? (, expression)* "]"
-arrayAccess = ( IDENTIFIER ( "[" expression "]" )+ )
+arrayAccess  = ( IDENTIFIER ( "[" expression "]" )+ )
+functionCall =  IDENTIFIER "(" expression? ("," expression)* ")"
 */
 
 
 import * as TOKENS from './tokens.js'
 import * as ASTNode from './ASTNodes.js'
-import { parseError } from './utils.js';
+import { parseError, runtimeError } from './utils.js';
 
 export default class Parser{
+    functionTrackingStack = []
+    globalFunctions = ['print', 'arr_push', 'arr_pop', 'map_set', 'map_del'];
+
     constructor(tokens){
         this.tokens = tokens
         this.current = 0
@@ -120,7 +128,23 @@ export default class Parser{
             return new ASTNode.String(lexeme, this.previous().line);
         }
         else if (this.match([TOKENS.IDENTIFIER])){
-            return new ASTNode.Identifier(this.previous().lexeme, this.previous().line);
+            let identifier = this.previous().lexeme
+
+            if( this.match([TOKENS.LEFT_PAREN]) ){
+                let args = []
+
+                if( !this.match([TOKENS.RIGHT_PAREN]) ){
+                    args.push(this.expression())
+                    while(this.match([TOKENS.COMMA])){
+                        args.push(this.expression())
+                    }
+                    this.consume(TOKENS.RIGHT_PAREN, "Expect ) at the end of the function call")
+                }
+
+                return new ASTNode.FunctionCall(identifier, args, this.previous().line);
+            }else{   
+                return new ASTNode.Identifier(identifier, this.previous().line);
+            }
         }
         else if (this.match([TOKENS.NUMBER])){
             return new ASTNode.Number(this.previous().lexeme, this.previous().line);
@@ -143,7 +167,7 @@ export default class Parser{
             this.consume(TOKENS.RIGHT_BRACKET, 'Expect ] at the end of the array')
             return new ASTNode.ArrayLiteral(expressions, line);
         }
-      }
+    }
 
     arrayAccession(){
         if(this.check(TOKENS.IDENTIFIER) && this.checkNext(TOKENS.LEFT_BRACKET)){
@@ -317,17 +341,79 @@ export default class Parser{
         return new ASTNode.WhileStmt(expr, whileStatements, line)
     }
 
+    functionDeclarationStmt(){
+        this.functionTrackingStack.push(1)
+
+        let line = this.advance().line
+        let funcIdentifier = this.consume(TOKENS.IDENTIFIER, 'Expect identifier after the func keyword')
+        if(this.globalFunctions.includes(funcIdentifier.lexeme)){
+            runtimeError(line, `Functions can't have names of the global functions, ${funcIdentifier.lexeme}`);
+        }
+
+        this.consume(TOKENS.LEFT_PAREN, 'Expect opening ( after the function identifier')
+
+        let parameters = []
+        if(!this.check(TOKENS.RIGHT_PAREN)){
+            parameters.push(
+                this.consume(TOKENS.IDENTIFIER, 'Expect identifier in the function parameters list')
+            )
+          
+            while(this.match([TOKENS.COMMA])){
+                parameters.push(
+                    this.consume(TOKENS.IDENTIFIER, 'Expect identifier in the function parameters list')
+                )
+            }
+        }
+        
+        this.consume(TOKENS.RIGHT_PAREN, 'Expect closing ) after the function arguments list')
+        this.consume(TOKENS.LEFT_BRACE, 'Expect opening { before the the function body')
+
+        // handle empty function declaration
+        let functionStatements = []
+        if(!this.match([TOKENS.RIGHT_BRACE])){
+            functionStatements = this.statements()
+            this.consume(TOKENS.RIGHT_BRACE, 'Expect closing } after the the function body')
+        }
+
+        this.functionTrackingStack.pop(1)
+        return new ASTNode.FunctionDeclarationStmt(funcIdentifier, parameters, functionStatements, line)
+    }
+
+    returnStmt(){
+        let line = this.advance().line
+
+        if(!this.functionTrackingStack.length){
+            parseError(line, "Can't have return statements outside of functions");
+        }
+
+        let expr = new ASTNode.Null(null, line);
+        if(!this.match([TOKENS.SEMICOLON])){
+            expr = this.expression()
+            this.consume(TOKENS.SEMICOLON, "Expect ';' after expression");
+        }
+
+        return new ASTNode.ReturnStmt(expr, line)
+    }
+
     statement() {
-        if (this.check(TOKENS.PRINT)){
+        if(this.check(TOKENS.PRINT)){
             return this.printStatement();
         }
 
-        if (this.check(TOKENS.IF)){
+        if(this.check(TOKENS.IF)){
             return this.ifStatement();
         }
 
-        if (this.check(TOKENS.WHILE)){
+        if(this.check(TOKENS.WHILE)){
             return this.whileStatement();
+        }
+
+        if(this.check(TOKENS.FUNC)){
+            return this.functionDeclarationStmt();
+        }
+
+        if(this.check(TOKENS.RETURN)){
+            return this.returnStmt();
         }
 
         if(this.check(TOKENS.IDENTIFIER)){
