@@ -1,9 +1,11 @@
+import * as TYPES from  './types.js'
 const WHITE  = "\x1b[0m"
 const BLUE   = "\x1b[94m"
 const CYAN   = "\x1b[96m"
 const GREEN  = "\x1b[92m"
 const YELLOW = "\x1b[93m"
 const RED    = "\x1b[91m"
+
 
 export function lexError(line, message){
     process.stdout.write(RED)
@@ -61,22 +63,16 @@ export function printAST(statements){
     }
 }
 
-const TYPE_ARRAY = 'TYPE_ARRAY'
-const TYPE_NUMBER = 'TYPE_NUMBER'
-const TYPE_STRING = 'TYPE_STRING'  
-const TYPE_BOOL   = 'TYPE_BOOL'
-const TYPE_NULL   = 'TYPE_NULL'
-
 export function formattedDatatype(dataType){
     let [type, val] = dataType
 
-    if(type == TYPE_NUMBER){
+    if(type == TYPES.TYPE_NUMBER){
         process.stdout.write(CYAN)
         process.stdout.write(val.toString())
         return
     }
 
-    if(type == TYPE_STRING){
+    if(type == TYPES.TYPE_STRING){
         process.stdout.write(YELLOW)
         process.stdout.write('"')
         process.stdout.write(val.toString())
@@ -84,19 +80,19 @@ export function formattedDatatype(dataType){
         return
     }
 
-    if(type == TYPE_BOOL){
+    if(type == TYPES.TYPE_BOOL){
         process.stdout.write(GREEN)
         process.stdout.write(val.toString())
         return
     }
 
-    if(type == TYPE_NULL){
+    if(type == TYPES.TYPE_NULL){
         process.stdout.write(RED)
         process.stdout.write('null')
         return
     }
     
-    if(type == TYPE_ARRAY){
+    if(type == TYPES.TYPE_ARRAY){
         process.stdout.write(WHITE)
         process.stdout.write('[')
 
