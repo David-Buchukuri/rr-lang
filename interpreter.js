@@ -148,7 +148,8 @@ export default class Interpreter{
                     runtimeError(node.op.line, `An operand of ${node.op.lexeme} must be a boolean`)
                 }
             }
-        }else if(node instanceof ASTNode.Binary){
+        }
+        else if(node instanceof ASTNode.Binary){
             let [leftType, leftVal] = this.interpret(node.left, env)
             let [rightType, rightVal] = this.interpret(node.right, env)
         
@@ -194,6 +195,36 @@ export default class Interpreter{
             else if(node.op.type == TOKENS.EQUAL_EQUAL){
                 return [TYPE_BOOL, leftVal === rightVal]
             }
+        }
+        else if(node instanceof ASTNode.LogicalOr){
+            let [leftType, leftVal] = this.interpret(node.left, env)
+            if(leftType != TYPE_BOOL){
+                runtimeError(node.line, `Operands of logical or must be two booleans`)
+            }
+            if(leftVal){
+                return [leftType, leftVal]
+            }
+
+            let [rightType, rightVal] = this.interpret(node.right, env)
+            if(rightType != TYPE_BOOL){
+                runtimeError(node.line, `Operands of logical or must be two booleans`)
+            }
+            return [rightType, rightVal]
+        }
+        else if(node instanceof ASTNode.LogicalAnd){
+            let [leftType, leftVal] = this.interpret(node.left, env)
+            if(leftType != TYPE_BOOL){
+                runtimeError(node.line, `Operands of logical and must be two booleans`)
+            }
+            if(!leftVal){
+                return [leftType, leftVal]
+            }
+
+            let [rightType, rightVal] = this.interpret(node.right, env)
+            if(rightType != TYPE_BOOL){
+                runtimeError(node.line, `Operands of logical or must be two booleans`)
+            }
+            return [rightType, rightVal]
         }
 
         // statements

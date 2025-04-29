@@ -28,6 +28,48 @@ export class Binary extends Expr{
     }
 }
 
+export class LogicalAnd extends Expr{
+    constructor(left, op, right, line){
+        super()
+        if( !(left instanceof Expr) ){parseError(line, `${left} is not an expression`)}
+        if( !(right instanceof Expr) ){parseError(line, `${right} is not an expression`)}
+        if( !(op instanceof Token) ){parseError(line, `${right} is not a token`)}
+
+        this.left = left
+        this.op = op
+        this.right = right
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `LogicalAnd (${this.op.lexeme }, ${this.left}, ${this.right})`;
+    }
+    toString(){
+        return `LogicalAnd (${this.op.lexeme }, ${this.left}, ${this.right})`;
+    }
+}
+
+export class LogicalOr extends Expr{
+    constructor(left, op, right, line){
+        super()
+        if( !(left instanceof Expr) ){parseError(line, `${left} is not an expression`)}
+        if( !(right instanceof Expr) ){parseError(line, `${right} is not an expression`)}
+        if( !(op instanceof Token) ){parseError(line, `${right} is not a token`)}
+
+        this.left = left
+        this.op = op
+        this.right = right
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `LogicalOr (${this.op.lexeme }, ${this.left}, ${this.right})`;
+    }
+    toString(){
+        return `LogicalOr (${this.op.lexeme }, ${this.left}, ${this.right})`;
+    }
+}
+
 export class Unary extends Expr{
     constructor(op, right, line){
         super()

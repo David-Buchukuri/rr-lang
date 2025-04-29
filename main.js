@@ -114,15 +114,23 @@ import { printAST } from './utils.js'
 // `
 
 
-let srcCode = `
-    func fib(a){
-        if(a <= 1){
-            return a;
-        }
-        return fib(a - 1) + fib(a - 2);
-    }
+// let srcCode = `
+//     func fib(a){
+//         if(a <= 1){
+//             return a;
+//         }
+//         return fib(a - 1) + fib(a - 2);
+//     }
     
-    print fib(15);
+//     print fib(15);
+// `
+
+// let srcCode = `
+//     a = a and b or 4 < 5 and 3 < 1 and 3;
+// `
+let srcCode = `
+    a = 1 > 4 and 1 > 2 or 1 > 1 or 3 > 2;
+    print a;
 `
 
 let lexer = new Lexer(srcCode);

@@ -23,7 +23,9 @@ functionDeclarationStmt      → "func" IDENTIFIER "(" IDENTIFIER? ("," IDENTIFI
 returnStmt                   → "return" expression? ";" ; 
 
 ---
-expression     → equality ;
+expression     → logicOr ;
+logicOr        → logicAnd ("or" logicAnd)* ;
+logicAnd       → equality ("and" equality)* ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
@@ -246,8 +248,32 @@ export default class Parser{
         return expression
     }
 
+    logicalAnd(){
+        let expression = this.equality()
+        
+        while( this.match([TOKENS.AND]) ){
+            let operator = this.previous()
+            let right = this.equality()
+            expression = new ASTNode.LogicalAnd(expression, operator, right, operator.line)
+        }
+
+        return expression
+    }
+
+    logicalOr(){
+        let expression = this.logicalAnd()
+        
+        while( this.match([TOKENS.OR]) ){
+            let operator = this.previous()
+            let right = this.logicalAnd()
+            expression = new ASTNode.LogicalOr(expression, operator, right, operator.line)
+        }
+
+        return expression
+    }
+
     expression(){
-        return this.equality()
+        return this.logicalOr()
     }
 
     printStatement(){
