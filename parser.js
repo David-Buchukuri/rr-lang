@@ -3,7 +3,6 @@ program        → statements EOF ;
 statements     → statement*;
 
 statement      → exprStmt
-               | printStmt
                | arrayElementAssignmentStmt
                | standardAssignmentStmt
                | ifStmt
@@ -15,7 +14,6 @@ statement      → exprStmt
 standardAssignmentStmt       → IDENTIFIER "=" expression ";" ;
 arrayElementAssignmentStmt   → arrayAccess "=" expression ";" ;
 exprStmt                     → expression ";" ;
-printStmt                    → "print" expression ";" ;
 ifStmt                       → "if" "(" expression ")" "{" statements? "}" ;
                                ("else" "{" statements? "}")? ;
 whileStmt                    → "while" "(" expression ")" "{" statements? "}" ;
@@ -45,10 +43,10 @@ functionCall =  IDENTIFIER "(" expression? ("," expression)* ")"
 import * as TOKENS from './tokens.js'
 import * as ASTNode from './ASTNodes.js'
 import { parseError, runtimeError } from './utils.js';
+import { globalFunctions } from './globalFunctions.js'
 
 export default class Parser{
     functionTrackingStack = []
-    globalFunctions = ['print', 'arr_push', 'arr_pop', 'map_set', 'map_del'];
 
     constructor(tokens){
         this.tokens = tokens
@@ -276,13 +274,6 @@ export default class Parser{
         return this.logicalOr()
     }
 
-    printStatement(){
-        let line = this.advance().line
-        let expression = this.expression();
-        this.consume(TOKENS.SEMICOLON, "Expect ';' after expression");
-        return new ASTNode.PrintStmt(expression, line);
-    }
-
     expressionStmt(){
         let line = this.peek().line
         let expression = this.expression();
@@ -372,8 +363,8 @@ export default class Parser{
 
         let line = this.advance().line
         let funcIdentifier = this.consume(TOKENS.IDENTIFIER, 'Expect identifier after the func keyword')
-        if(this.globalFunctions.includes(funcIdentifier.lexeme)){
-            runtimeError(line, `Functions can't have names of the global functions, ${funcIdentifier.lexeme}`);
+        if(globalFunctions.includes(funcIdentifier.lexeme)){
+            runtimeError(line, `User defined functions can't have names of the global functions, ${funcIdentifier.lexeme}`);
         }
 
         this.consume(TOKENS.LEFT_PAREN, 'Expect opening ( after the function identifier')
@@ -422,10 +413,6 @@ export default class Parser{
     }
 
     statement() {
-        if(this.check(TOKENS.PRINT)){
-            return this.printStatement();
-        }
-
         if(this.check(TOKENS.IF)){
             return this.ifStatement();
         }

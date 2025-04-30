@@ -33,7 +33,6 @@ export const IF ='IF'
 export const NULL ='NULL'
 export const OR ='OR'
 
-export const PRINT = 'PRINT' 
 export const RETURN = 'RETURN' 
 export const TRUE = 'TRUE' 
 export const VAR = 'VAR' 

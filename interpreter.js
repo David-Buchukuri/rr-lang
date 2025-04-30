@@ -3,6 +3,7 @@ import * as TOKENS from  './tokens.js'
 import { runtimeError, formattedDatatype } from  './utils.js'
 import Environment from  './environment.js'
 import * as TYPES from  './types.js'
+import { globalFunctions } from './globalFunctions.js'
 
 class ReturnException {
     constructor(value) {
@@ -13,6 +14,20 @@ class ReturnException {
 export default class Interpreter{
     interpretAst(statements){
         return this.interpret(statements, new Environment())
+    }
+
+    InterpretSpecialFunction(node, env){
+        if(node.identifier == 'print'){
+            if(node.args.length != 1){
+                runtimeError(node.line, `function print expected 1 argument(s), got ${node.args.length}`);
+            }
+
+            let result = this.interpret(node.args[0], env)
+            formattedDatatype(result)
+            console.log()
+        }
+
+        return [TYPES.TYPE_NULL, null]
     }
 
     interpret(node, env){
@@ -88,6 +103,10 @@ export default class Interpreter{
             return [elemToAccessType, elemToAccess]
         }
         else if(node instanceof ASTNode.FunctionCall){
+            if( globalFunctions.includes(node.identifier) ){
+                return this.InterpretSpecialFunction(node, env)
+            }
+
             let func = env.getFunc(node.identifier)
             if(!func){
                 runtimeError(node.line, `Function ${node.identifier} is not declared`);
@@ -225,11 +244,6 @@ export default class Interpreter{
         // statements
         else if(node instanceof ASTNode.ExpressionStmt){
             this.interpret(node.expression, env)
-        }
-        else if(node instanceof ASTNode.PrintStmt){
-            let result = this.interpret(node.expression, env)
-            formattedDatatype(result)
-            console.log()
         }
         else if(node instanceof ASTNode.StandardAssignmentStmt){
             let value = this.interpret(node.value, env)

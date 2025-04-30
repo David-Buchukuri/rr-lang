@@ -294,22 +294,6 @@ export class ExpressionStmt extends Stmt{
     }
 }
 
-export class PrintStmt extends Stmt{
-    constructor(expression, line){
-        super()
-        if( !(expression instanceof Expr) ){parseError(line, `${expression} is not an expression`)}
-        this.expression = expression
-        this.line = line
-    }
-
-    [util.inspect.custom]() {
-        return `PrintStmt (${this.expression})`;
-    }
-    toString(){
-        return `PrintStmt (${this.expression})`;
-    }
-}
-
 export class StandardAssignmentStmt extends Stmt{
     constructor(identifier, value, line){
         super()
