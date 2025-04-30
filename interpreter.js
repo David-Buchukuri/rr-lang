@@ -16,20 +16,6 @@ export default class Interpreter{
         return this.interpret(statements, new Environment())
     }
 
-    InterpretSpecialFunction(node, env){
-        if(node.identifier == 'print'){
-            if(node.args.length != 1){
-                runtimeError(node.line, `function print expected 1 argument(s), got ${node.args.length}`);
-            }
-
-            let result = this.interpret(node.args[0], env)
-            formattedDatatype(result)
-            console.log()
-        }
-
-        return [TYPES.TYPE_NULL, null]
-    }
-
     interpret(node, env){
         // expressions
         if(node instanceof ASTNode.Number){
@@ -59,52 +45,11 @@ export default class Interpreter{
             return [TYPES.TYPE_ARRAY, arr]
         }
         else if(node instanceof ASTNode.ArrayAccession){
-            let variableName = node.identifier
-            let variable = env.getVar(variableName)
-            if(!variable){
-                runtimeError(node.line, `Undefined variable ${variableName}`)
-            }
-
-            let varType = variable[0]
-            if(varType != TYPES.TYPE_ARRAY){
-                runtimeError(node.line, `Expected type array for ${variableName}, got ${varType}`)
-            }
-
-            let indexAccessions = node.values
-            let indexesToAccess = [];
-            for(let i = 0; i < indexAccessions.length; i++){
-                let [type, value] = this.interpret(indexAccessions[i], env)
-                if(type != TYPES.TYPE_NUMBER){
-                    runtimeError(node.line, `Expected type number for index, got ${type}`)
-                }
-                if(value % 1 != 0){
-                    runtimeError(node.line, `Expected integer for index, got float`)
-                }
-                indexesToAccess.push(value)
-            }
-
-            let elemToAccess = variable[1]
-            let elemToAccessType = TYPES.TYPE_ARRAY
-            
-            for(let i = 0; i < indexesToAccess.length; i++){
-                let idx = indexesToAccess[i]
-
-                if(elemToAccessType != TYPES.TYPE_ARRAY){
-                    runtimeError(node.line, `Cannot access index on element of type ${elemToAccessType}`)
-                }
-
-                if(idx >= elemToAccess.length || idx < 0){
-                    runtimeError(node.line, `Index out of range`)
-                }
-
-                [elemToAccessType, elemToAccess] = elemToAccess[idx]
-            }
-
-            return [elemToAccessType, elemToAccess]
+            return this.accessArrayIndex(node.identifier, node.values, node.line, env)
         }
         else if(node instanceof ASTNode.FunctionCall){
             if( globalFunctions.includes(node.identifier) ){
-                return this.InterpretSpecialFunction(node, env)
+                return this.InterpretGlobalFunction(node, env)
             }
 
             let func = env.getFunc(node.identifier)
@@ -250,51 +195,36 @@ export default class Interpreter{
             env.setVar(node.identifier, value)
         }
         else if(node instanceof ASTNode.ArrayElementAssignmentStmt){
-            let variableName = node.identifier
-            let variable = env.getVar(variableName) 
-            if(!variable){
-                runtimeError(node.line, `Undefined variable ${variableName}`)
-            }
-
-            let varType = variable[0]
-            if(varType != TYPES.TYPE_ARRAY){
-                runtimeError(node.line, `Expected type array for ${variableName}, got ${varType}`)
-            }
-
+            let indexAccessionsLength = node.indexExpressions.length 
             let indexAccessions = node.indexExpressions
-            let indexesToAccess = [];
-            for(let i = 0; i < indexAccessions.length; i++){
-                let [type, value] = this.interpret(indexAccessions[i], env)
-                if(type != TYPES.TYPE_NUMBER){
-                    runtimeError(node.line, `Expected type number for index, got ${type}`)
-                }
-                if(value % 1 != 0){
-                    runtimeError(node.line, `Expected integer for index, got float`)
-                }
-                indexesToAccess.push(value)
+            let lastIndexAccession = indexAccessions.pop()
+
+            let elemToChange;
+            if(indexAccessionsLength > 1){
+                elemToChange = this.accessArrayIndex(node.identifier, indexAccessions, node.line, env) 
+            }else{
+                let variable = env.getVar(node.identifier)
+                if(!variable){ runtimeError(node.line, `Undefined variable ${node.identifier}`) }
+                elemToChange = variable
             }
 
-            let elemToAccess = variable[1]
-            let elemToAccessType = TYPES.TYPE_ARRAY
-            let arrayToChange = elemToAccess
-            let idx = indexesToAccess[0]
-            
-            for(let i = 0; i < indexesToAccess.length; i++){
-                idx = indexesToAccess[i]
-
-                if(elemToAccessType != TYPES.TYPE_ARRAY){
-                    runtimeError(node.line, `Cannot access index on element of type ${elemToAccessType}`)
-                }
-                arrayToChange = elemToAccess
-
-                if(idx >= elemToAccess.length || idx < 0){
-                    runtimeError(node.line, `Index out of range`)
-                }
-
-                [elemToAccessType, elemToAccess] = elemToAccess[idx]
+            let [elemToChangeType, elemToChangeVal] = elemToChange
+            if(elemToChangeType != TYPES.TYPE_ARRAY){
+                runtimeError(node.line, `Cannot access index on element of type ${elemToChangeType}`)
             }
 
-            arrayToChange[idx] = this.interpret(node.value, env)
+            let [idxType, idxValue] = this.interpret(lastIndexAccession, env)
+            if(idxType != TYPES.TYPE_NUMBER){
+                runtimeError(node.line, `Expected type number for index, got ${idxType}`)
+            }
+            if(idxValue % 1 != 0){
+                runtimeError(node.line, `Expected integer for index, got float`)
+            }
+            if(idxValue >= elemToChangeVal.length || idxValue < 0){
+                runtimeError(node.line, `Index out of range`)
+            }
+
+            elemToChangeVal[idxValue] = this.interpret(node.value, env)
         }
         else if(node instanceof ASTNode.IfStmt){
             let [type, val] = this.interpret(node.conditionExpr, env)
@@ -332,6 +262,116 @@ export default class Interpreter{
         }
     }
 
+    // global functions
+    interpretPrintFunction(node, env){
+        if(node.args.length != 1){
+            runtimeError(node.line, `function print expects 1 argument, got ${node.args.length}`);
+        }
+
+        let result = this.interpret(node.args[0], env)
+        formattedDatatype(result)
+        console.log()
+        
+        return [TYPES.TYPE_NULL, null]
+    }
+
+    interpretArrPushFunction(node, env){
+        if(node.args.length < 2){
+            runtimeError(node.line, `function arr_push expects at least 2 arguments, got ${node.args.length}`);
+        }
+        if(node.args.length > 3){
+            runtimeError(node.line, `function arr_push expects no more than 3 arguments, got ${node.args.length}`);
+        }
+
+        let arrayToPushInto = this.interpret(node.args[0], env)
+        let [type, arr] = arrayToPushInto
+        if(type != TYPES.TYPE_ARRAY){
+            runtimeError(node.line, `function arr_push expects an array as it's first argument, got ${type}`);
+        }
+
+        let indexToPush = arr.length
+        if(node.args.length == 3){
+            let [idxType, idxVal] = this.interpret(node.args[2], env)
+            if(idxType != TYPES.TYPE_NUMBER){
+                runtimeError(node.line, `Expected type number as an index argument, got ${type}`)
+            }
+            if(idxVal % 1 != 0){
+                runtimeError(node.line, `Expected integer as an index argument, got float`)
+            }
+            if(idxVal > arr.length || idxVal < 0){
+                runtimeError(node.line, `Index out of range`)
+            }
+            indexToPush = idxVal
+        }
+
+        arr.splice(indexToPush, 0, this.interpret(node.args[1], env))
+        return [TYPES.TYPE_NULL, null]
+    }
+
+    interpretArrPopFunction(node, env){
+        if(node.args.length < 1){
+            runtimeError(node.line, `function arr_pop expects at least 1 argument, got ${node.args.length}`);
+        }
+        if(node.args.length > 2){
+            runtimeError(node.line, `function arr_pop expects no more than 2 arguments, got ${node.args.length}`);
+        }
+
+        let arrayToPopFrom = this.interpret(node.args[0], env)
+        let [type, arr] = arrayToPopFrom
+        if(type != TYPES.TYPE_ARRAY){
+            runtimeError(node.line, `function arr_pop expects an array as it's first argument, got ${type}`);
+        }        
+        if(arr.length == 0){
+            runtimeError(node.line, `Can't use arr_pop on empty array`);
+        }
+
+        let idxToRemove = arr.length - 1
+        if(node.args.length == 2){
+            let [idxType, idxVal] = this.interpret(node.args[1], env)
+            if(idxType != TYPES.TYPE_NUMBER){
+                runtimeError(node.line, `Expected type number as an index argument, got ${type}`)
+            }
+            if(idxVal % 1 != 0){
+                runtimeError(node.line, `Expected integer as an index argument, got float`)
+            }
+            if(idxVal >= arr.length || idxVal < 0){
+                runtimeError(node.line, `Index out of range`)
+            }
+            idxToRemove = idxVal
+        }
+
+        return arr.splice(idxToRemove, 1)[0]
+    }
+
+    interpretArrLengthFunction(node, env){
+        if(node.args.length != 1){
+            runtimeError(node.line, `function arr_length expects 1 argument, got ${node.args.length}`);
+        }
+
+        let array = this.interpret(node.args[0], env)
+        let [type, arr] = array
+        if(type != TYPES.TYPE_ARRAY){
+            runtimeError(node.line, `function arr_length expects an array as it's first argument, got ${type}`);
+        }
+        
+        return [TYPES.TYPE_NUMBER, arr.length]
+    }
+
+    InterpretGlobalFunction(node, env){
+        if(node.identifier == 'print'){
+            return this.interpretPrintFunction(node, env)
+        }
+        if(node.identifier == 'arr_push'){
+            return this.interpretArrPushFunction(node, env)
+        }
+        if(node.identifier == 'arr_pop'){
+            return this.interpretArrPopFunction(node, env)
+        }
+        if(node.identifier == 'arr_length'){
+            return this.interpretArrLengthFunction(node, env)
+        }
+    }
+
     // helpers
     checkNumberOperands(leftType, rightType, operatorToken){
         if(leftType == TYPES.TYPE_NUMBER && rightType == TYPES.TYPE_NUMBER){return}
@@ -344,6 +384,47 @@ export default class Interpreter{
         runtimeError(operatorToken.line, `Operands of ${operatorToken.lexeme} must be two strings or two numbers`)
     }
 
+    accessArrayIndex(variableName, indexAccessions, line, env){
+        let variable = env.getVar(variableName)
+        if(!variable){
+            runtimeError(line, `Undefined variable ${variableName}`)
+        }
+
+        let varType = variable[0]
+        if(varType != TYPES.TYPE_ARRAY){
+            runtimeError(line, `Expected type array for ${variableName}, got ${varType}`)
+        }
+
+        let indexesToAccess = [];
+        for(let i = 0; i < indexAccessions.length; i++){
+            let [type, value] = this.interpret(indexAccessions[i], env)
+            if(type != TYPES.TYPE_NUMBER){
+                runtimeError(line, `Expected type number for index, got ${type}`)
+            }
+            if(value % 1 != 0){
+                runtimeError(line, `Expected integer for index, got float`)
+            }
+            indexesToAccess.push(value)
+        }
+
+        let elemToAccess = variable[1]
+        let elemToAccessType = TYPES.TYPE_ARRAY
+        
+        for(let i = 0; i < indexesToAccess.length; i++){
+            let idx = indexesToAccess[i]
+
+            if(elemToAccessType != TYPES.TYPE_ARRAY){
+                runtimeError(line, `Cannot access index on element of type ${elemToAccessType}`)
+            }
+
+            if(idx >= elemToAccess.length || idx < 0){
+                runtimeError(line, `Index out of range`)
+            }
+
+            [elemToAccessType, elemToAccess] = elemToAccess[idx]
+        }
+
+        return [elemToAccessType, elemToAccess]
+    }
+
 }
-
-

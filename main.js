@@ -40,16 +40,26 @@ import { printAST } from './utils.js'
 
 // let srcCode = `
 //     b = [1, 2, [3, 4]];
-
+//     print(b);
+    
 //     b[0] = [67, "abc"];
-
+//     print(b);
+    
 //     b[0][1] = 7;
-
+//     print(b);
+    
 //     b[0] = 9;
-
+//     print(b);
+    
 //     b[1] = [1, null, [3, [1, 2, true, "abc", 1]]];
+//     print(b);
 
-//     print b[1 + 1];
+//     b[0] = 0;
+//     b[1] = 1;
+//     b[2] = 2;
+
+//     print(b[1 + 1]);
+//     print(b);
 // `
 
 // let srcCode = `
@@ -57,13 +67,15 @@ import { printAST } from './utils.js'
 //     c = [];
 //     a = 1;
     
-//     print b[a];
+//     print(b[a]);
 
 //     if(false){
 //     }else{
 //         a = "apple";
 //     }
-//     print a;
+//     print(a);
+//     b[2][1];
+//     print(b[2][1]);
 // `
 
 // let srcCode = `
@@ -114,16 +126,68 @@ import { printAST } from './utils.js'
 // `
 
 
-let srcCode = `
-    func fib(a){
-        if(a <= 1){
-            return a;
-        }
-        return fib(a - 1) + fib(a - 2);
-    }
 
-    print(fib(15));
-    print([1, 2, [3, true, "false"]]);
+// let srcCode = `
+//     b = [1, 2, [3, 4]];
+//     arr_push(b[2], [1,2,3]);
+//     print(b);
+//     arr_push(b[2][2], "hello");
+//     print(b);
+//     arr_push(b, "text", 2);
+//     print(b);
+// `
+
+// -------------------------
+// let srcCode = `
+//     less = [];
+//     more = [];
+//     arr = [1, 2, 3, 4, 5, 6];
+//     i = 0;
+
+//     while(i < arr_length(arr)){
+//         if(arr[i] < 3){
+//             arr_push(less, arr[i]);
+//         }else{
+//             arr_push(more, arr[i]);
+//         }
+//         i = i + 1;
+//     }
+
+//     print("less");
+//     print(less);
+//     print("more");
+//     print(more);
+// `
+
+// let srcCode = `
+//     func fib(a){
+//         if(a <= 1){
+//             return a;
+//         }
+//         return fib(a - 1) + fib(a - 2);
+//     }
+
+//     print(fib(15));
+// `
+
+
+// let srcCode = `
+//     i = 0;
+//     arr = [];
+//     while(i < 5){
+//         arr_push(arr, i);
+//         i = i + 1;
+//     }
+
+//     while(arr_length(arr) != 0){
+//         print(arr_pop(arr));
+//     }
+// `
+let srcCode = `
+    arr = [1, 2, 3, 4, 5];
+    poppedElem = arr_pop(arr, 3);
+    print(arr);
+    print(poppedElem);
 `
 
 let lexer = new Lexer(srcCode);
