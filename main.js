@@ -183,12 +183,39 @@ import { printAST } from './utils.js'
 //         print(arr_pop(arr));
 //     }
 // `
+// let srcCode = `
+//     arr = [1, 2, 3, 4, 5];
+//     poppedElem = arr_pop(arr, 3);
+//     print(arr);
+//     print(poppedElem);
+// `
 let srcCode = `
-    arr = [1, 2, 3, 4, 5];
-    poppedElem = arr_pop(arr, 3);
-    print(arr);
-    print(poppedElem);
+    a = 9;
+    elems = [1, 2, 3, null, 4, a, ["hello", "world"]];
+
+    for(elem in elems){
+        print("for block");
+        print(elem);
+        print("-----");
+    }else{
+        print("else block");
+        print(elem);
+        print("-----");
+    }
+
 `
+// let srcCode = `
+//     arr1 = [1,2,3];
+//     arr2 = arr1;
+    
+//     arr_push(arr2, 4);
+//     arr_pop(arr2, 0);
+
+//     print(arr1);
+//     print(arr2);
+// `
+
+
 
 let lexer = new Lexer(srcCode);
 let tokens = lexer.lexTokens();

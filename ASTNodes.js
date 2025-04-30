@@ -371,6 +371,40 @@ export class IfStmt extends Stmt{
     }
 }
 
+export class ForStmt extends Stmt{
+    constructor(elementIdentifier, arrayExpression, forStatements, elseStatements, hasElseBlock, line){
+        super()
+        if( elementIdentifier?.type != IDENTIFIER){parseError(line, `${elementIdentifier} is not an identifier`)}
+        if( !(arrayExpression instanceof Expr) ){parseError(line, `${arrayExpression} is not an expression`)}
+
+        for(let i = 0; i < forStatements.length; i++){
+            if( !(forStatements[i] instanceof Stmt) ){
+                parseError(forStatements[i]?.line ?? line, `${forStatements[i]} is not a statement`)
+            }
+        }
+
+        for(let i = 0; i < elseStatements.length; i++){
+            if( !(elseStatements[i] instanceof Stmt) ){
+                parseError(elseStatements[i]?.line ?? line, `${elseStatements[i]} is not a statement`)
+            }
+        }
+
+        this.elementIdentifier = elementIdentifier
+        this.arrayExpression = arrayExpression
+        this.forStatements = forStatements
+        this.elseStatements = elseStatements
+        this.hasElseBlock = hasElseBlock
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `ForStmt (Elem - ${this.elementIdentifier.lexeme}, Array - ${this.arrayExpression}, For Branch(${this.forStatements}), Has Else Block - ${this.hasElseBlock} , Else Branch - (${this.elseStatements}))`;
+    }
+    toString(){
+        return `ForStmt (Elem - ${this.elementIdentifier.lexeme}, Array - ${this.arrayExpression}, For Branch(${this.forStatements}), Has Else Block - ${this.hasElseBlock} , Else Branch - (${this.elseStatements}))`;
+    }
+}
+
 export class WhileStmt extends Stmt{
     constructor(conditionExpr, statements, line){
         super()

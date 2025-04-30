@@ -252,6 +252,26 @@ export default class Interpreter{
                 this.interpret(node.statements, env)
             }
         }
+        else if(node instanceof ASTNode.ForStmt){
+            let [arrayType, arrayVal] = this.interpret(node.arrayExpression, env)
+            if(arrayType != TYPES.TYPE_ARRAY){
+                runtimeError(node.line, `${arrayVal} is not an array`)
+            }
+
+            let currIdx = 0;
+
+            while(currIdx < arrayVal.length){
+                env.setVar(node.elementIdentifier.lexeme, arrayVal[currIdx])
+                // if element's type is null and else block is present, execute else block
+                if(arrayVal[currIdx][0] == TYPES.TYPE_NULL && node.hasElseBlock){
+                    this.interpret(node.elseStatements, env)
+                }else{
+                    this.interpret(node.forStatements, env)
+                }
+                
+                currIdx += 1
+            }
+        }
         else if(node instanceof ASTNode.FunctionDeclarationStmt){
             env.setFunc(node.identifier.lexeme, node)
         }

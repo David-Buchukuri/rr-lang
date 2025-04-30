@@ -8,7 +8,8 @@ statement      → exprStmt
                | ifStmt
                | whileStmt
                | functionDeclarationStmt
-               | returnStmt;
+               | returnStmt
+               | forStmt;
                
 
 standardAssignmentStmt       → IDENTIFIER "=" expression ";" ;
@@ -18,7 +19,9 @@ ifStmt                       → "if" "(" expression ")" "{" statements? "}" ;
                                ("else" "{" statements? "}")? ;
 whileStmt                    → "while" "(" expression ")" "{" statements? "}" ;
 functionDeclarationStmt      → "func" IDENTIFIER "(" IDENTIFIER? ("," IDENTIFIER)* ")" "{" statements? "}" ;
-returnStmt                   → "return" expression? ";" ; 
+returnStmt                   → "return" expression? ";" ;
+forStmt                      → for "(" IDENTIFIER "in" IDENTIFIER ")" "{" statements? "}"
+                               ("else" "{" statements? "}")?
 
 ---
 expression     → logicOr ;
@@ -166,6 +169,8 @@ export default class Parser{
             }
             this.consume(TOKENS.RIGHT_BRACKET, 'Expect ] at the end of the array')
             return new ASTNode.ArrayLiteral(expressions, line);
+        }else{
+            parseError(this.peek().line, `Unexpected token "${this.peek().lexeme}"`);
         }
     }
 
@@ -341,6 +346,40 @@ export default class Parser{
         return new ASTNode.IfStmt(expr, ifStatements, elseStatements, line)
     }
 
+    forStatement(){
+        let line = this.advance().line
+        this.consume(TOKENS.LEFT_PAREN, 'Expect ( before the for loop header')
+        
+        let elemIdentifier = this.consume(TOKENS.IDENTIFIER, 'Expect identifier after ( in the for loop header')
+        
+        this.consume(TOKENS.IN, 'Expect "in" after element identifier in the for loop header')
+
+        let arrExpression = this.expression()
+
+        this.consume(TOKENS.RIGHT_PAREN, 'Expect ) after the for loop header')
+        this.consume(TOKENS.LEFT_BRACE, 'Expect { before the for loop statements')
+
+        let forStatements = []
+        if(!this.match([TOKENS.RIGHT_BRACE])){
+            forStatements = this.statements()
+            this.consume(TOKENS.RIGHT_BRACE, 'Expect } after the for loop statements')
+        }
+
+        let elseStatements = []
+        let hasElseBlock = false
+        if(this.match([TOKENS.ELSE])){
+            this.consume(TOKENS.LEFT_BRACE, 'Expect { before else statements')
+            hasElseBlock = true
+
+            if(!this.match([TOKENS.RIGHT_BRACE])){
+                elseStatements = this.statements()
+                this.consume(TOKENS.RIGHT_BRACE, 'Expect } after else statements')
+            }
+        }
+
+        return new ASTNode.ForStmt(elemIdentifier, arrExpression, forStatements, elseStatements, hasElseBlock, line)
+    }
+
     whileStatement(){
         let line = this.advance().line
         this.consume(TOKENS.LEFT_PAREN, 'Expect ( before while condition')
@@ -419,6 +458,10 @@ export default class Parser{
 
         if(this.check(TOKENS.WHILE)){
             return this.whileStatement();
+        }
+
+        if(this.check(TOKENS.FOR)){
+            return this.forStatement();
         }
 
         if(this.check(TOKENS.FUNC)){

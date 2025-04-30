@@ -14,8 +14,9 @@ class Lexer{
         'or'     : TOKENS.OR,
         'return' : TOKENS.RETURN,
         'true'   : TOKENS.TRUE,
-        'var'    : TOKENS.VAR,
         'while'  : TOKENS.WHILE,
+        'for'    : TOKENS.FOR,
+        'in'     : TOKENS.IN,
     }
 
     constructor(sourceCode){
