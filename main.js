@@ -261,14 +261,31 @@ import { printAST } from './utils.js'
 //     }
 //     print(map);
 // `
+// let srcCode = `
+//     map = {"nums": [0,1], "map": {"key": "value"}, null: "null value", 3.5: 355};
+//     map["hello"] = {};
+//     map[7] = 77;
+
+//     for(key in map_keys(map)){
+//         print(key);
+//         print(map[key]);
+//         print("---");
+//     }
+// `
 let srcCode = `
-    map = {"nums": [0,1], "map": {"key": "value"}};
-    map["hello"] = {};
-    map["hello"]["world"] = [11];
-    map["nums"] = [7];
-    print(
-        map
-    );
+    map = {"nums": [0,1], "map": {"key": "value"}, null: "null value", 3.5: 355};
+    print(map);
+    print(map_keys(map));
+
+    map_del(map, null);
+   
+    print(map);
+    print(map_keys(map));
+   
+    map_del(map, 3.5);
+   
+    print(map);
+    print(map_keys(map));
 `
 
 let lexer = new Lexer(srcCode);

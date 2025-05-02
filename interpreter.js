@@ -427,6 +427,46 @@ export default class Interpreter{
         return [TYPES.TYPE_NUMBER, arr.length]
     }
 
+    interpretMapKeysFunction(node, env){
+        if(node.args.length != 1){
+            runtimeError(node.line, `function map_keys expects 1 argument, got ${node.args.length}`);
+        }
+
+        let res = this.interpret(node.args[0], env)
+        let [resType, resVal] = res
+        if(resType != TYPES.TYPE_MAP){
+            runtimeError(node.line, `function map_keys expects a map as it's first argument, got ${resType}`);
+        }
+        
+        return [TYPES.TYPE_ARRAY, resVal.keyOrder]
+    }
+
+    interpretMapDelFunction(node, env){
+        if(node.args.length != 2){
+            runtimeError(node.line, `function map_del expects 2 argument, got ${node.args.length}`);
+        }
+
+        let map = this.interpret(node.args[0], env)
+        let [mapType, mapVal] = map
+        if(mapType != TYPES.TYPE_MAP){
+            runtimeError(node.line, `function map_keys expects a map as it's first argument, got ${mapType}`);
+        }
+
+        let key = this.interpret(node.args[1], env)
+        let [keyType, keyVal] = key
+        if([TYPES.TYPE_MAP, TYPES.TYPE_ARRAY].includes(keyType)){
+            runtimeError(node.line, `Second argument of the function map_keys cannot be ${keyType}`);
+        }
+
+        if(mapVal.structure[keyVal]){
+            delete mapVal.structure[keyVal]
+            let keyIndex = mapVal.keyOrder.findIndex(el => el[1] == keyVal)
+            mapVal.keyOrder.splice(keyIndex, 1)
+        }
+        
+        return [TYPES.TYPE_NULL, null]
+    }
+
     InterpretGlobalFunction(node, env){
         if(node.identifier == 'print'){
             return this.interpretPrintFunction(node, env)
@@ -439,6 +479,12 @@ export default class Interpreter{
         }
         if(node.identifier == 'arr_length'){
             return this.interpretArrLengthFunction(node, env)
+        }
+        if(node.identifier == 'map_keys'){
+            return this.interpretMapKeysFunction(node, env)
+        }
+        if(node.identifier == 'map_del'){
+            return this.interpretMapDelFunction(node, env)
         }
     }
 
