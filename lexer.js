@@ -82,6 +82,9 @@ class Lexer{
         else if(char == ':'){
             this.addToken(TOKENS.COLON)
         }
+        else if(char == '%'){
+            this.addToken(TOKENS.MODULO)
+        }
         else if(char == '>'){
             if(this.currEqual('=')){
                 this.addToken(TOKENS.GREATER_EQUAL)

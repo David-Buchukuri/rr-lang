@@ -30,7 +30,8 @@ logicAnd           → equality ("and" equality)* ;
 equality           → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison         → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term               → factor ( ( "-" | "+" ) factor )* ;
-factor             → unary ( ( "/" | "*" ) unary )* ;
+factor             → modulo ( ( "/" | "*" ) modulo )* ;
+modulo             → unary ( "%" unary )* ;
 unary              → ( "!" | "-" ) unary | structureAccession ;
 structureAccession → structureAccess | primary ;
 primary            → NUMBER | STRING | "true" | "false" | "null" ;
@@ -228,12 +229,24 @@ export default class Parser{
         return this.structureAccession();
     }
 
-    factor() {
+    modulo() {
         let expression = this.unary()
+
+        while(this.match([TOKENS.MODULO])){
+            let operator = this.previous()
+            let right = this.unary()
+            expression = new ASTNode.Binary(expression, operator, right, operator.line)
+        }
+
+        return expression
+    }
+
+    factor() {
+        let expression = this.modulo()
 
         while(this.match([TOKENS.STAR, TOKENS.SLASH])){
             let operator = this.previous()
-            let right = this.unary()
+            let right = this.modulo()
             expression = new ASTNode.Binary(expression, operator, right, operator.line)
         }
 

@@ -154,6 +154,10 @@ export default class Interpreter{
                 this.checkNumberOperands(leftType, rightType, node.op)
                 return [TYPES.TYPE_NUMBER, leftVal - rightVal]
             }   
+            else if(node.op.type == TOKENS.MODULO){
+                this.checkNumberOperands(leftType, rightType, node.op)
+                return [TYPES.TYPE_NUMBER, leftVal % rightVal]
+            }   
             else if(node.op.type == TOKENS.SLASH){
                 if(rightVal == 0){
                     runtimeError(`Division by zero`, node.op.line)

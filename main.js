@@ -272,20 +272,24 @@ import { printAST } from './utils.js'
 //         print("---");
 //     }
 // `
-let srcCode = `
-    map = {"nums": [0,1], "map": {"key": "value"}, null: "null value", 3.5: 355};
-    print(map);
-    print(map_keys(map));
+// let srcCode = `
+//     map = {"nums": [0,1], "map": {"key": "value"}, null: "null value", 3.5: 355};
+//     print(map);
+//     print(map_keys(map));
 
-    map_del(map, null);
+//     map_del(map, null);
    
-    print(map);
-    print(map_keys(map));
+//     print(map);
+//     print(map_keys(map));
    
-    map_del(map, 3.5);
+//     map_del(map, 3.5);
    
-    print(map);
-    print(map_keys(map));
+//     print(map);
+//     print(map_keys(map));
+// `
+let srcCode = `
+    res = -55 % 10 % 3 + 5;
+    print(res);
 `
 
 let lexer = new Lexer(srcCode);

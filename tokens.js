@@ -11,6 +11,7 @@ export const SEMICOLON = 'SEMICOLON'
 export const COLON = 'COLON' 
 export const SLASH = 'SLASH' 
 export const STAR = 'STAR' 
+export const MODULO = 'MODULO'
 
 export const BANG = 'BANG'
 export const BANG_EQUAL = 'BANG_EQUAL'
