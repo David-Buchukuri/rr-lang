@@ -1,4 +1,5 @@
-export const TYPE_ARRAY = 'TYPE_ARRAY'
+export const TYPE_ARRAY  = 'TYPE_ARRAY'
+export const TYPE_MAP    = 'TYPE_MAP'
 export const TYPE_NUMBER = 'TYPE_NUMBER'
 export const TYPE_STRING = 'TYPE_STRING'  
 export const TYPE_BOOL   = 'TYPE_BOOL'

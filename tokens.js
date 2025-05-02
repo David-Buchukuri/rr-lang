@@ -8,6 +8,7 @@ export const COMMA = 'COMMA'
 export const MINUS = 'MINUS' 
 export const PLUS = 'PLUS' 
 export const SEMICOLON = 'SEMICOLON' 
+export const COLON = 'COLON' 
 export const SLASH = 'SLASH' 
 export const STAR = 'STAR' 
 

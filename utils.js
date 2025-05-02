@@ -107,4 +107,28 @@ export function formattedDatatype(dataType){
         process.stdout.write(WHITE)
         process.stdout.write(']')
     }
+    if(type == TYPES.TYPE_MAP){
+        process.stdout.write(WHITE)
+        process.stdout.write('{')
+
+        let mapKeys = val.keyOrder
+        let map = val.structure
+
+        for(let i = 0; i < mapKeys.length; i++){
+            let keyVal = mapKeys[i][1]
+
+            formattedDatatype(map[keyVal].key)
+            process.stdout.write(WHITE)
+            process.stdout.write(" : ")
+            formattedDatatype(map[keyVal].value)
+
+            if(i != mapKeys.length - 1){
+                process.stdout.write(WHITE)
+                process.stdout.write(', ')
+            }
+        }
+
+        process.stdout.write(WHITE)
+        process.stdout.write('}')
+    }
 }

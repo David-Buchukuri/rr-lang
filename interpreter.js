@@ -44,8 +44,42 @@ export default class Interpreter{
             }
             return [TYPES.TYPE_ARRAY, arr]
         }
-        else if(node instanceof ASTNode.ArrayAccession){
-            return this.accessArrayIndex(node.identifier, node.values, node.line, env)
+        else if(node instanceof ASTNode.MapLiteral){
+            let hashMap = {
+                structure: {},
+                keyOrder: []
+            }
+
+            for(let i = 0; i < node.keyValuePairs.length; i++){
+                let [keyT, keyV] = this.interpret(node.keyValuePairs[i][0], env)
+                let [valT, valV] = this.interpret(node.keyValuePairs[i][1], env)
+
+                if(keyT == TYPES.TYPE_MAP){
+                    runtimeError(node.keyValuePairs[i][0].line, "Map key cannot be a map");
+                }
+                if(keyT == TYPES.TYPE_ARRAY){
+                    runtimeError(node.keyValuePairs[i][0].line, "Map key cannot be an array");
+                }
+
+                hashMap.structure[keyV] = {
+                    value: [valT, valV],
+                    key: [keyT, keyV]
+                }
+                hashMap.keyOrder.push([keyT, keyV])
+            }
+            return [TYPES.TYPE_MAP, hashMap]
+        }
+        else if(node instanceof ASTNode.StructureAccession){
+            let variable = env.getVar(node.identifier)
+            if(!variable){
+                runtimeError(node.line, `Undefined variable ${node.identifier}`)
+            }
+            let varType = variable[0]
+            if( ![TYPES.TYPE_ARRAY, TYPES.TYPE_MAP].includes(varType) ){
+                runtimeError(node.line, `Expected type array or map for ${node.identifier}, got ${varType}`)
+            }
+
+            return this.accessStructureElement(node.identifier, node.values, node.line, env)
         }
         else if(node instanceof ASTNode.FunctionCall){
             if( globalFunctions.includes(node.identifier) ){
@@ -194,14 +228,14 @@ export default class Interpreter{
             let value = this.interpret(node.value, env)
             env.setVar(node.identifier, value)
         }
-        else if(node instanceof ASTNode.ArrayElementAssignmentStmt){
+        else if(node instanceof ASTNode.StructureElementAssignmentStmt){
             let indexAccessionsLength = node.indexExpressions.length 
             let indexAccessions = node.indexExpressions
             let lastIndexAccession = indexAccessions.pop()
 
             let elemToChange;
             if(indexAccessionsLength > 1){
-                elemToChange = this.accessArrayIndex(node.identifier, indexAccessions, node.line, env) 
+                elemToChange = this.accessStructureElement(node.identifier, indexAccessions, node.line, env) 
             }else{
                 let variable = env.getVar(node.identifier)
                 if(!variable){ runtimeError(node.line, `Undefined variable ${node.identifier}`) }
@@ -209,22 +243,38 @@ export default class Interpreter{
             }
 
             let [elemToChangeType, elemToChangeVal] = elemToChange
-            if(elemToChangeType != TYPES.TYPE_ARRAY){
-                runtimeError(node.line, `Cannot access index on element of type ${elemToChangeType}`)
-            }
-
             let [idxType, idxValue] = this.interpret(lastIndexAccession, env)
-            if(idxType != TYPES.TYPE_NUMBER){
-                runtimeError(node.line, `Expected type number for index, got ${idxType}`)
-            }
-            if(idxValue % 1 != 0){
-                runtimeError(node.line, `Expected integer for index, got float`)
-            }
-            if(idxValue >= elemToChangeVal.length || idxValue < 0){
-                runtimeError(node.line, `Index out of range`)
-            }
 
-            elemToChangeVal[idxValue] = this.interpret(node.value, env)
+            if(elemToChangeType == TYPES.TYPE_ARRAY){
+                if(idxType != TYPES.TYPE_NUMBER){
+                    runtimeError(node.line, `Expected type number for index, got ${idxType}`)
+                }
+                if(idxValue % 1 != 0){
+                    runtimeError(node.line, `Expected integer for index, got float`)
+                }
+                if(idxValue >= elemToChangeVal.length || idxValue < 0){
+                    runtimeError(node.line, `Index out of range`)
+                }
+
+                elemToChangeVal[idxValue] = this.interpret(node.value, env)
+            }else if(elemToChangeType == TYPES.TYPE_MAP){
+                if([TYPES.TYPE_ARRAY, TYPES.TYPE_MAP].includes(idxType)){
+                    runtimeError(node.line, `Key can't be type of ${idxType}`)
+                }
+
+                if(elemToChangeVal.structure[idxValue]){
+                    let keyIndex = elemToChangeVal.keyOrder.findIndex(el => el[1] == idxValue)
+                    elemToChangeVal.keyOrder.splice(keyIndex, 1)
+                }
+
+                elemToChangeVal.keyOrder.push([idxType, idxValue])
+                elemToChangeVal.structure[idxValue] = {
+                    value: this.interpret(node.value, env),
+                    key: [idxType, idxValue]
+                }
+            }else{
+                runtimeError(node.line, `Cannot use element assignment on ${elemToChangeType}`)
+            }
         }
         else if(node instanceof ASTNode.IfStmt){
             let [type, val] = this.interpret(node.conditionExpr, env)
@@ -403,45 +453,49 @@ export default class Interpreter{
         if(leftType == TYPES.TYPE_STRING && rightType == TYPES.TYPE_STRING){return}
         runtimeError(operatorToken.line, `Operands of ${operatorToken.lexeme} must be two strings or two numbers`)
     }
+    accessStructureElement(variableName, keyAccessions, line, env){
+        let variable = env.getVar(variableName)      
 
-    accessArrayIndex(variableName, indexAccessions, line, env){
-        let variable = env.getVar(variableName)
-        if(!variable){
-            runtimeError(line, `Undefined variable ${variableName}`)
-        }
-
-        let varType = variable[0]
-        if(varType != TYPES.TYPE_ARRAY){
-            runtimeError(line, `Expected type array for ${variableName}, got ${varType}`)
-        }
-
-        let indexesToAccess = [];
-        for(let i = 0; i < indexAccessions.length; i++){
-            let [type, value] = this.interpret(indexAccessions[i], env)
-            if(type != TYPES.TYPE_NUMBER){
-                runtimeError(line, `Expected type number for index, got ${type}`)
-            }
-            if(value % 1 != 0){
-                runtimeError(line, `Expected integer for index, got float`)
-            }
-            indexesToAccess.push(value)
+        let keysToAccess = [];
+        for(let i = 0; i < keyAccessions.length; i++){
+            let [type, value] = this.interpret(keyAccessions[i], env)
+            keysToAccess.push([type, value] )
         }
 
         let elemToAccess = variable[1]
-        let elemToAccessType = TYPES.TYPE_ARRAY
+        let elemToAccessType = variable[0]
         
-        for(let i = 0; i < indexesToAccess.length; i++){
-            let idx = indexesToAccess[i]
+        for(let i = 0; i < keysToAccess.length; i++){
+            let idxType = keysToAccess[i][0]
+            let idxVal = keysToAccess[i][1]
 
-            if(elemToAccessType != TYPES.TYPE_ARRAY){
-                runtimeError(line, `Cannot access index on element of type ${elemToAccessType}`)
+            if(elemToAccessType == TYPES.TYPE_ARRAY){
+                if(idxVal >= elemToAccess.length || idxVal < 0){
+                    runtimeError(line, `Index out of range`)
+                }
+                if(idxType != TYPES.TYPE_NUMBER){
+                    runtimeError(line, `Expected type number for index, got ${idxType}`)
+                }
+                if(idxVal % 1 != 0){
+                    runtimeError(line, `Expected integer for index, got float`)
+                }
+
+                [elemToAccessType, elemToAccess] = elemToAccess[idxVal]
+            }
+            else if(elemToAccessType == TYPES.TYPE_MAP){
+                if([TYPES.TYPE_ARRAY, TYPES.TYPE_MAP].includes(idxType)){
+                    runtimeError(line, `Key can't be type of ${idxType}`)
+                }
+
+                if(elemToAccess.structure[idxVal]){
+                    [elemToAccessType, elemToAccess] = elemToAccess.structure[idxVal].value
+                }else{
+                    [elemToAccessType, elemToAccess] = [ TYPES.TYPE_NULL, null ]
+                }
+            }else{
+                runtimeError(line, `Cannot use element accession operator on element of type ${elemToAccessType}`)
             }
 
-            if(idx >= elemToAccess.length || idx < 0){
-                runtimeError(line, `Index out of range`)
-            }
-
-            [elemToAccessType, elemToAccess] = elemToAccess[idx]
         }
 
         return [elemToAccessType, elemToAccess]

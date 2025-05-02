@@ -3,7 +3,7 @@ program        → statements EOF ;
 statements     → statement*;
 
 statement      → exprStmt
-               | arrayElementAssignmentStmt
+               | structureElementAssignmentStmt
                | standardAssignmentStmt
                | ifStmt
                | whileStmt
@@ -13,7 +13,7 @@ statement      → exprStmt
                
 
 standardAssignmentStmt       → IDENTIFIER "=" expression ";" ;
-arrayElementAssignmentStmt   → arrayAccess "=" expression ";" ;
+structureElementAssignmentStmt   → structureAccess "=" expression ";" ;
 exprStmt                     → expression ";" ;
 ifStmt                       → "if" "(" expression ")" "{" statements? "}" ;
                                ("else" "{" statements? "}")? ;
@@ -24,22 +24,24 @@ forStmt                      → for "(" IDENTIFIER "in" IDENTIFIER ")" "{" stat
                                ("else" "{" statements? "}")?
 
 ---
-expression     → logicOr ;
-logicOr        → logicAnd ("or" logicAnd)* ;
-logicAnd       → equality ("and" equality)* ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-term           → factor ( ( "-" | "+" ) factor )* ;
-factor         → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary | arrayAccession ;
-arrayAccession → arrayAccess | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "null"
-               | "(" expression ")" | functionCall | IDENTIFIER | arrayLiteral;
+expression         → logicOr ;
+logicOr            → logicAnd ("or" logicAnd)* ;
+logicAnd           → equality ("and" equality)* ;
+equality           → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison         → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term               → factor ( ( "-" | "+" ) factor )* ;
+factor             → unary ( ( "/" | "*" ) unary )* ;
+unary              → ( "!" | "-" ) unary | structureAccession ;
+structureAccession → structureAccess | primary ;
+primary            → NUMBER | STRING | "true" | "false" | "null" ;
+                   | "(" expression ")" | functionCall | IDENTIFIER | arrayLiteral | mapLiteral ;
 
 --- helpers ---
-arrayLiteral = "[" expression? (, expression)* "]"
-arrayAccess  = ( IDENTIFIER ( "[" expression "]" )+ )
-functionCall =  IDENTIFIER "(" expression? ("," expression)* ")"
+arrayLiteral = "[" expression? ("," expression)* "]" ;
+mapLiteral = "{" keyValuePair? ("," keyValuePair)* "}" ;
+structureAccess  =  IDENTIFIER ( "[" expression "]" )+  ;
+functionCall =  IDENTIFIER "(" expression? ("," expression)* ")" ;
+keyValuePair = expression ":" expression ;
 */
 
 
@@ -169,12 +171,35 @@ export default class Parser{
             }
             this.consume(TOKENS.RIGHT_BRACKET, 'Expect ] at the end of the array')
             return new ASTNode.ArrayLiteral(expressions, line);
-        }else{
+        }
+        else if(this.match([TOKENS.LEFT_BRACE])){
+            let line = this.previous().line
+            if(this.match([TOKENS.RIGHT_BRACE])){         // empty map case
+                return new ASTNode.MapLiteral([], line);
+            }
+
+            let keyValuePairs = [];
+            let key = this.expression();
+            this.consume(TOKENS.COLON, "Expect : after map key")
+            let value = this.expression();
+            keyValuePairs.push([key, value])
+
+            while(this.match([TOKENS.COMMA])){
+                key = this.expression();
+                this.consume(TOKENS.COLON, "Expect : after map key")
+                let value = this.expression();
+                keyValuePairs.push([key, value])
+            }
+            this.consume(TOKENS.RIGHT_BRACE, 'Expect } at the end of the map')
+
+            return new ASTNode.MapLiteral(keyValuePairs, line);
+        }
+        else{
             parseError(this.peek().line, `Unexpected token "${this.peek().lexeme}"`);
         }
     }
 
-    arrayAccession(){
+    structureAccession(){
         if(this.check(TOKENS.IDENTIFIER) && this.checkNext(TOKENS.LEFT_BRACKET)){
             let identifierToken = this.advance()
             let identifier = identifierToken.lexeme
@@ -187,7 +212,7 @@ export default class Parser{
                 this.consume(TOKENS.RIGHT_BRACKET, 'Expect ] after array index accession')
             }
 
-            return new ASTNode.ArrayAccession(identifier, indexAccessions, line)
+            return new ASTNode.StructureAccession(identifier, indexAccessions, line)
         }
 
         return this.primary()
@@ -200,7 +225,7 @@ export default class Parser{
           return new ASTNode.Unary(operator, right, operator.line);
         }
     
-        return this.arrayAccession();
+        return this.structureAccession();
     }
 
     factor() {
@@ -300,7 +325,7 @@ export default class Parser{
         return new ASTNode.StandardAssignmentStmt(identifier, expression, line)
     }
 
-    arrayElementAssignmentStmt(){
+    structureElementAssignmentStmt(){
         let identifierToken = this.advance()
         let identifier = identifierToken.lexeme
         let line = identifierToken.line
@@ -316,7 +341,7 @@ export default class Parser{
         let value = this.expression()
 
         this.consume(TOKENS.SEMICOLON, 'Expect ; after assignment')
-        return new ASTNode.ArrayElementAssignmentStmt(identifier, indexExpressions, value, line)
+        return new ASTNode.StructureElementAssignmentStmt(identifier, indexExpressions, value, line)
     }
 
     ifStatement(){
@@ -477,7 +502,7 @@ export default class Parser{
                 this.checkNext(TOKENS.LEFT_BRACKET) &&
                 this.isEqualAhead()
             ){
-                return this.arrayElementAssignmentStmt()
+                return this.structureElementAssignmentStmt()
             }
             else if(this.checkNext(TOKENS.EQUAL)){
                 return this.standardAssignmentStmt()

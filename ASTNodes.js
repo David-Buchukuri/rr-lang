@@ -194,7 +194,31 @@ export class ArrayLiteral extends Expr{
     }
 }
 
-export class ArrayAccession extends Expr{
+export class MapLiteral extends Expr{
+    constructor(keyValuePairs, line){
+        super()
+        for(let i = 0; i < keyValuePairs.length; i++){
+            if( !(keyValuePairs[i][0] instanceof Expr) ){
+                parseError(line, `${keyValuePairs[i][0]} is not an expression`)
+            }
+            if( !(keyValuePairs[i][1] instanceof Expr) ){
+                parseError(line, `${keyValuePairs[i][1]} is not an expression`)
+            }
+        }
+
+        this.keyValuePairs = keyValuePairs
+        this.line = line
+    }
+
+    [util.inspect.custom]() {
+        return `MapLiteral (${this.keyValuePairs.map( el => '(' + el[0].toString() + ' -> ' + el[1].toString() + ')' )})`;
+    }
+    toString(){
+        return `MapLiteral (${this.keyValuePairs.map( el => '(' + el[0].toString() + ' -> ' + el[1].toString() + ')' )})`;
+    }
+}
+
+export class StructureAccession extends Expr{
     constructor(identifier, values, line){
         super()
         for(let i = 0; i < values.length; i++){
@@ -209,10 +233,10 @@ export class ArrayAccession extends Expr{
     }
 
     [util.inspect.custom]() {
-        return `ArrayAccession (Identifier - ${this.identifier}, Indexes - (${this.values}))`;
+        return `StructureAccession (Identifier - ${this.identifier}, Indexes - (${this.values}))`;
     }
     toString(){
-        return `ArrayAccession (Identifier - ${this.identifier}, Indexes - (${this.values}))`;
+        return `StructureAccession (Identifier - ${this.identifier}, Indexes - (${this.values}))`;
     }
 }
 
@@ -313,7 +337,7 @@ export class StandardAssignmentStmt extends Stmt{
     }
 }
 
-export class ArrayElementAssignmentStmt extends Stmt{
+export class StructureElementAssignmentStmt extends Stmt{
     constructor(identifier, indexExpressions, value, line){
         super()
         for(let i = 0; i < indexExpressions.length; i++){
@@ -331,10 +355,10 @@ export class ArrayElementAssignmentStmt extends Stmt{
     }
 
     [util.inspect.custom]() {
-        return `ArrayElementAssignmentStmt (Identifier - ${this.identifier}, Indexes - (${this.indexExpressions}), Value - ${this.value})`;
+        return `StructureElementAssignmentStmt (Identifier - ${this.identifier}, Indexes - (${this.indexExpressions}), Value - ${this.value})`;
     }
     toString(){
-        return `ArrayElementAssignmentStmt (Identifier - ${this.identifier}, Indexes - (${this.indexExpressions}), Value - ${this.value})`;
+        return `StructureElementAssignmentStmt (Identifier - ${this.identifier}, Indexes - (${this.indexExpressions}), Value - ${this.value})`;
     }
 }
 

@@ -103,26 +103,26 @@ import { printAST } from './utils.js'
 //     func test1(a){
 //         while(true){
 //             if(true){
-//                 print "deep return";
+//                 print("deep return");
 //                 return 5;
 //             }
 //         }
 
-//         print "should not print";
+//         print("should not print");
 //     }
 
 //     func test(){
-//         print test1(true);
-//         print "logged test 1";
+//         print(test1(true));
+//         print("logged test 1");
 //         return b;
-//         print "logged test 2";
+//         print("logged test 2");
 //     }
 
 //     func fib(){
 //         return test();
 //     }
     
-//     print fib();
+//     print(fib());
 // `
 
 
@@ -189,21 +189,20 @@ import { printAST } from './utils.js'
 //     print(arr);
 //     print(poppedElem);
 // `
-let srcCode = `
-    a = 9;
-    elems = [1, 2, 3, null, 4, a, ["hello", "world"]];
+// let srcCode = `
+//     a = 9;
+//     elems = [1, 2, 3, null, 4, a, ["hello", "world"]];
 
-    for(elem in elems){
-        print("for block");
-        print(elem);
-        print("-----");
-    }else{
-        print("else block");
-        print(elem);
-        print("-----");
-    }
-
-`
+//     for(elem in elems){
+//         print("for block");
+//         print(elem);
+//         print("-----");
+//     }else{
+//         print("else block");
+//         print(elem);
+//         print("-----");
+//     }
+// `
 // let srcCode = `
 //     arr1 = [1,2,3];
 //     arr2 = arr1;
@@ -214,8 +213,63 @@ let srcCode = `
 //     print(arr1);
 //     print(arr2);
 // `
+// let srcCode = `
+//     arr = [
+//         1, 
+//         2, 
+//         {
+//             "tree": ["leaves", "root", 7, [1, {"jondex": 9}]],
+//             1: 99
+//         }
+//     ];
 
+//     map = { 2: "val", -6: [1,2,"hey"], 30: arr };
 
+//     print(
+//         arr[2]["tree"][3][1]["jondex"] + map[-6][1] + map[30][2]["tree"][2]
+//     );
+
+//     print(
+//         map["cxeni"]
+//     );
+// `
+// let srcCode = `
+//     map = {"nums": [0,1]};
+    
+//     map[null] = 5;
+//     print(map);
+
+//     map["nums"] = {1: 2};
+//     print(map);
+    
+//     map["nums"] = {1: 2};   
+//     map[1] = 999;
+    
+//     func str(){
+//         return "array";
+//     }
+    
+//     map["my-" + str()] = [1,2,null,4];
+//     for(elem in map["my-array"]){
+//         print("----");
+//         print("for");
+//         print(elem);
+//     }else{
+//         print("----");
+//         print("else");
+//         print(elem);
+//     }
+//     print(map);
+// `
+let srcCode = `
+    map = {"nums": [0,1], "map": {"key": "value"}};
+    map["hello"] = {};
+    map["hello"]["world"] = [11];
+    map["nums"] = [7];
+    print(
+        map
+    );
+`
 
 let lexer = new Lexer(srcCode);
 let tokens = lexer.lexTokens();
