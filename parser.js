@@ -12,16 +12,16 @@ statement      → exprStmt
                | forStmt;
                
 
-standardAssignmentStmt       → IDENTIFIER "=" expression ";" ;
-structureElementAssignmentStmt   → structureAccess "=" expression ";" ;
-exprStmt                     → expression ";" ;
-ifStmt                       → "if" "(" expression ")" "{" statements? "}" ;
-                               ("else" "{" statements? "}")? ;
-whileStmt                    → "while" "(" expression ")" "{" statements? "}" ;
-functionDeclarationStmt      → "func" IDENTIFIER "(" IDENTIFIER? ("," IDENTIFIER)* ")" "{" statements? "}" ;
-returnStmt                   → "return" expression? ";" ;
-forStmt                      → for "(" IDENTIFIER "in" IDENTIFIER ")" "{" statements? "}"
-                               ("else" "{" statements? "}")?
+standardAssignmentStmt           → IDENTIFIER "=" expression ";" ;
+structureElementAssignmentStmt   → structureAccession "=" expression ";" ;
+exprStmt                         → expression ";" ;
+ifStmt                           → "if" "(" expression ")" "{" statements? "}" ;
+                                   ("else" "{" statements? "}")? ;
+whileStmt                        → "while" "(" expression ")" "{" statements? "}" ;
+functionDeclarationStmt          → "func" IDENTIFIER "(" IDENTIFIER? ("," IDENTIFIER)* ")" "{" statements? "}" ;
+returnStmt                       → "return" expression? ";" ;
+forStmt                          → for "(" IDENTIFIER "in" IDENTIFIER ")" "{" statements? "}"
+                                   ("else" "{" statements? "}")?
 
 ---
 expression         → logicOr ;
@@ -32,15 +32,15 @@ comparison         → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term               → factor ( ( "-" | "+" ) factor )* ;
 factor             → modulo ( ( "/" | "*" ) modulo )* ;
 modulo             → unary ( "%" unary )* ;
-unary              → ( "!" | "-" ) unary | structureAccession ;
-structureAccession → structureAccess | primary ;
+unary              → ( "!" | "-" ) unary | primary ;
 primary            → NUMBER | STRING | "true" | "false" | "null" ;
-                   | "(" expression ")" | functionCall | IDENTIFIER | arrayLiteral | mapLiteral ;
+                   | "(" expression ")" | functionCall | IDENTIFIER | arrayLiteral 
+                   | mapLiteral | structureAccession;
 
 --- helpers ---
 arrayLiteral = "[" expression? ("," expression)* "]" ;
 mapLiteral = "{" keyValuePair? ("," keyValuePair)* "}" ;
-structureAccess  =  IDENTIFIER ( "[" expression "]" )+  ;
+structureAccession  =  IDENTIFIER ( "[" expression "]" )+  ;
 functionCall =  IDENTIFIER "(" expression? ("," expression)* ")" ;
 keyValuePair = expression ":" expression ;
 */
@@ -133,6 +133,20 @@ export default class Parser{
             lexeme = lexeme.slice(1, lexeme.length - 1)
             return new ASTNode.String(lexeme, this.previous().line);
         }
+        else if(this.check(TOKENS.IDENTIFIER) && this.checkNext(TOKENS.LEFT_BRACKET)){
+            let identifierToken = this.advance()
+            let identifier = identifierToken.lexeme
+            let line = identifierToken.line
+
+            let indexAccessions = []
+
+            while(this.match([TOKENS.LEFT_BRACKET])){
+                indexAccessions.push(this.expression())
+                this.consume(TOKENS.RIGHT_BRACKET, 'Expect ] after array index accession')
+            }
+
+            return new ASTNode.StructureAccession(identifier, indexAccessions, line)
+        }
         else if (this.match([TOKENS.IDENTIFIER])){
             let identifier = this.previous().lexeme
 
@@ -200,25 +214,6 @@ export default class Parser{
         }
     }
 
-    structureAccession(){
-        if(this.check(TOKENS.IDENTIFIER) && this.checkNext(TOKENS.LEFT_BRACKET)){
-            let identifierToken = this.advance()
-            let identifier = identifierToken.lexeme
-            let line = identifierToken.line
-
-            let indexAccessions = []
-
-            while(this.match([TOKENS.LEFT_BRACKET])){
-                indexAccessions.push(this.expression())
-                this.consume(TOKENS.RIGHT_BRACKET, 'Expect ] after array index accession')
-            }
-
-            return new ASTNode.StructureAccession(identifier, indexAccessions, line)
-        }
-
-        return this.primary()
-    }
-
     unary() {
         if (this.match([TOKENS.BANG, TOKENS.MINUS])) {
           let operator = this.previous();
@@ -226,7 +221,7 @@ export default class Parser{
           return new ASTNode.Unary(operator, right, operator.line);
         }
     
-        return this.structureAccession();
+        return this.primary();
     }
 
     modulo() {
