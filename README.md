@@ -1,4 +1,4 @@
-# RR Programming Language 🧠
+# RR Programming Language
 
 **RR** is a lightweight and dynamically typed programming language.
 
@@ -10,7 +10,6 @@
 ```bash
 node rr.js path/to/your-script.rr
 ```
-
 
 <br>
 
