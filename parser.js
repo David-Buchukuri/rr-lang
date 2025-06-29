@@ -1,4 +1,5 @@
 /*
+--- Statements ---
 program        → statements EOF ;
 statements     → statement*;
 
@@ -18,31 +19,40 @@ exprStmt                         → expression ";" ;
 ifStmt                           → "if" "(" expression ")" "{" statements? "}" ;
                                    ("else" "{" statements? "}")? ;
 whileStmt                        → "while" "(" expression ")" "{" statements? "}" ;
-functionDeclarationStmt          → "func" IDENTIFIER "(" IDENTIFIER? ("," IDENTIFIER)* ")" "{" statements? "}" ;
+functionDeclarationStmt          → "func" IDENTIFIER "(" params? ")" "{" statements? "}" ;
 returnStmt                       → "return" expression? ";" ;
 forStmt                          → for "(" IDENTIFIER "in" IDENTIFIER ")" "{" statements? "}"
                                    ("else" "{" statements? "}")?
 
----
-expression         → logicOr ;
-logicOr            → logicAnd ("or" logicAnd)* ;
-logicAnd           → equality ("and" equality)* ;
-equality           → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison         → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-term               → factor ( ( "-" | "+" ) factor )* ;
-factor             → modulo ( ( "/" | "*" ) modulo )* ;
-modulo             → unary ( "%" unary )* ;
-unary              → ( "!" | "-" ) unary | primary ;
-primary            → NUMBER | STRING | "true" | "false" | "null" ;
-                   | "(" expression ")" | functionCall | IDENTIFIER | arrayLiteral 
-                   | mapLiteral | structureAccession;
+--- Expressions ---
+expression                       → logicOr ;
+logicOr                          → logicAnd ("or" logicAnd)* ;
+logicAnd                         → equality ("and" equality)* ;
+equality                         → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison                       → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term                             → factor ( ( "-" | "+" ) factor )* ;
+factor                           → modulo ( ( "/" | "*" ) modulo )* ;
+modulo                           → unary ( "%" unary )* ;
+unary                            → ( "!" | "-" ) unary | primary ;
+primary                          → NUMBER | STRING | "true" | "false" | "null"
+                                 | "(" expression ")" | functionCall | IDENTIFIER | arrayLiteral 
+                                 | mapLiteral | structureAccession;
 
---- helpers ---
-arrayLiteral = "[" expression? ("," expression)* "]" ;
-mapLiteral = "{" keyValuePair? ("," keyValuePair)* "}" ;
-structureAccession  =  IDENTIFIER ( "[" expression "]" )+  ;
-functionCall =  IDENTIFIER "(" expression? ("," expression)* ")" ;
-keyValuePair = expression ":" expression ;
+--- Helpers ---
+arrayLiteral                     → "[" expressionList? "]" ;
+mapLiteral                       → "{" ( keyValuePair ("," keyValuePair)* )? "}" ;
+structureAccession               → IDENTIFIER ( "[" expression "]" )+  ;
+functionCall                     → IDENTIFIER "(" expressionList? ")" ;
+keyValuePair                     → expression ":" expression ;
+params                           → IDENTIFIER ("," IDENTIFIER)* ;
+expressionList                   → expression ("," expression)* ;
+
+--- Lexical Rules ---
+NUMBER         → DIGIT+ ( "." DIGIT+ )? ;
+STRING         → "\"" <any char except "\"">* "\"" ;
+IDENTIFIER     → ALPHA ( ALPHA | DIGIT )* ;
+ALPHA          → "a" ... "z" | "A" ... "Z" | "_" ;
+DIGIT          → "0" ... "9" ;
 */
 
 
