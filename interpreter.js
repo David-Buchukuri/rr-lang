@@ -235,11 +235,11 @@ export default class Interpreter{
         else if(node instanceof ASTNode.StructureElementAssignmentStmt){
             let indexAccessionsLength = node.indexExpressions.length 
             let indexAccessions = node.indexExpressions
-            let lastIndexAccession = indexAccessions.pop()
+            let lastIndexAccession = indexAccessions[indexAccessions.length - 1]
 
             let elemToChange;
             if(indexAccessionsLength > 1){
-                elemToChange = this.accessStructureElement(node.identifier, indexAccessions, node.line, env) 
+                elemToChange = this.accessStructureElement(node.identifier, indexAccessions.slice(0, -1), node.line, env) 
             }else{
                 let variable = env.getVar(node.identifier)
                 if(!variable){ runtimeError(node.line, `Undefined variable ${node.identifier}`) }
